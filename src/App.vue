@@ -26,6 +26,7 @@ export default {
       isLogged: false,
       logInForm: false,
       username: '',
+      user: {},
       therapists: [],
       massages: []
     }
@@ -47,10 +48,21 @@ export default {
         this.fetchMassages()
       }
     },
-    logIn(username) {
-      this.isLogged = true;
-      this.username = username;
+    //login - logout
+    logIn(user) {
+      console.log(user);
+      axios.post(baseApiUrl + 'login', user)
+        .then(res => {
+          this.user = res.data;
+          this.isLogged = true;
+        })
+        .catch(e => console.log(e))
     },
+    logOut() {
+      this.isLogged = false;
+      this.user = {}
+    },
+    //fetches
     fetchTherapists() {
       axios.get(baseApiUrl + 'therapists')
         .then(res => this.therapists = res.data)
@@ -94,11 +106,16 @@ export default {
 </script>
 
 <template>
+  <!-- HEADER -->
   <AppHeader @menu="setMenu" :isLogged="isLogged" />
+
+  <!-- JUMBOTRON -->
   <AppJumbotron />
   <main class="container">
+
+    <!-- HOME -->
     <section v-if="menu === 1" class="home text-center pt-5">
-      <h1 class="mb-3"><span v-if="isLogged">HI {{ username.toUpperCase() }},<br></span> WELCOME TO BLISSFUL
+      <h1 class="mb-3"><span v-if="isLogged">HI {{ user.username.toUpperCase() }},<br></span> WELCOME TO BLISSFUL
         WELLNESS
         APP</h1>
       <p class="mb-5">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Distinctio id possimus eum dicta porro,
@@ -107,21 +124,30 @@ export default {
       <div class="buttons">
         <button v-if="!isLogged" class="btn btn-primary me-2" @click="logInForm = true">Login</button>
         <button v-if="!isLogged" class="btn btn-secondary">Sign in</button>
-        <button v-if="isLogged" class="btn btn-secondary" @click="isLogged = false">Log out</button>
+        <button v-if="isLogged" class="btn btn-secondary" @click="logOut">Log out</button>
       </div>
     </section>
+
+    <!-- THERAPISTS -->
     <section v-if="menu === 2" class="therapists pt-5">
       <h1 class="text-center mb-5">OUR THERAPISTS</h1>
-      <EmployeesCard v-for="(therapist, i) in therapists" :key="therapist.id" :index="i" :therapist="therapist" />
+      <EmployeesCard v-for="(therapist, i) in therapists" :key="therapist.id" :index="i" :therapist="therapist"
+        :userId="isLogged ? user.id : null" :isLogged="isLogged" @review-store="fetchTherapists" />
     </section>
+
+    <!-- MASSAGES -->
     <section v-if="menu === 3" class="massages pt-5">
       <h1 class="text-center mb-5">OUR MASSAGES</h1>
       <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage" />
     </section>
+
+    <!-- PRODUCTS -->
     <section v-if="menu === 4" class="products pt-5">
       <h1 class="text-center mb-5">OUR PRODUCTS</h1>
       <ProductCard v-for="i in 5" />
     </section>
+
+    <!-- ADMINISTRATION -->
     <section v-if="menu === 5" class="administration pt-5">
       <h1 v-if="administration === 0" class="text-center mb-5">ADMINISTRATE YOUR APP</h1>
       <AdministrationPage v-if="administration.index === 0" @administration="setAdministration" />
@@ -134,7 +160,11 @@ export default {
         @massage="massage" />
     </section>
   </main>
+
+  <!-- FOOTER -->
   <AppFooter />
+
+  <!-- LOG IN FORM -->
   <LogInForm v-if="logInForm" @login="logIn" @login-close="logInForm = false" />
 </template>
 

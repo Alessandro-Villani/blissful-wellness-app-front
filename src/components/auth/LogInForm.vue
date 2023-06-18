@@ -12,7 +12,7 @@ export default {
     methods: {
         logIn() {
             if (this.user.username && this.user.password) {
-                this.$emit('login', this.user.username);
+                this.$emit('login', this.user);
                 this.$emit('login-close');
             }
         }
