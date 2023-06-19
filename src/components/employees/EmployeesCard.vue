@@ -62,7 +62,7 @@ export default {
     <div class="employee-card mb-0 row align-items-center" :class="index % 2 === 0 ? 'flex-row-reverse' : 'flex-row'">
         <div class="col-5 d-flex flex-column align-items-center justify-content-center">
             <div class="col-12 d-flex flex-column justify-content-between align-items-center">
-                <h4 class="mb-3">{{ therapist.user.username }}</h4>
+                <h4 class="mb-3">{{ therapist.therapistName }}</h4>
             </div>
             <img class="employee-pic border rounded-circle img-fluid mb-3" :src="therapist.user.profilePic"
                 :alt="therapist.user.username">

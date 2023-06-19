@@ -20,7 +20,8 @@ export default {
         }
     },
     props: {
-        isLogged: Boolean
+        isLogged: Boolean,
+        roles: Array
     },
     emits: ['menu']
 }
@@ -49,7 +50,7 @@ export default {
             <a class="mb-0 py-1" @click="menuClick(2)">Therapists</a>
             <a class="mb-0 py-1" @click="menuClick(3)">Massages</a>
             <a class="mb-0 py-1" @click="menuClick(4)">Products</a>
-            <a v-if="isLogged" class="mb-0 py-1" @click="menuClick(5)">Administration</a>
+            <a v-if="isLogged && roles.includes('admin')" class="mb-0 py-1" @click="menuClick(5)">Administration</a>
         </nav>
     </header>
 </template>

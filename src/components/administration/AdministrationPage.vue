@@ -8,7 +8,7 @@ export default {
 <template>
     <div class="row">
         <div class="col-12 mb-3">
-            <div class="card p-5 d-flex align-items-center justify-content-center">
+            <div class="card p-5 d-flex align-items-center justify-content-center" @click="$emit('administration', 1)">
                 <i class="fa-solid fa-user fa-3x mb-3"></i>
                 <h4 class="mb-0">Therapists</h4>
             </div>

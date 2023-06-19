@@ -1,4 +1,8 @@
 <script>
+import axios from 'axios';
+
+const baseApiUrl = 'http://localhost:8080/api/v1/'
+
 import AppFooter from './components/AppFooter.vue';
 import AppHeader from './components/AppHeader.vue';
 import AppJumbotron from './components/AppJumbotron.vue';
@@ -6,13 +10,12 @@ import AdministrationPage from './components/administration/AdministrationPage.v
 import MassageForm from './components/administration/massages/MassageForm.vue';
 import MassageManagement from './components/administration/massages/MassageManagement.vue';
 import LogInForm from './components/auth/LogInForm.vue';
+import TherapistsManagement from './components/administration/therapists/TherapistsManagement.vue';
 import EmployeesCard from './components/employees/EmployeesCard.vue';
 import MassagesCard from './components/massages/MassagesCard.vue';
 import ProductCard from './components/products/ProductCard.vue';
-import axios from 'axios';
 
-const baseApiUrl = 'http://localhost:8080/api/v1/'
-
+import TherapistSelectForm from './components/administration/therapists/TherapistSelectForm.vue';
 export default {
   name: "Blissful Wellness app",
   data() {
@@ -20,18 +23,18 @@ export default {
       menu: 1,
       administration: {
         index: 0,
+        therapists: 0,
         massage: 0,
       },
       massageToEdit: {},
       isLogged: false,
       logInForm: false,
-      username: '',
       user: {},
       therapists: [],
       massages: []
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm },
   methods: {
     setMenu(i) {
       this.menu = i;
@@ -39,6 +42,7 @@ export default {
       if (i === 3) this.fetchMassages();
       if (i === 5) {
         this.administration.index = 0;
+        this.administration.therapists = 0;
         this.administration.massage = 0;
       }
     },
@@ -101,13 +105,21 @@ export default {
         .catch(e => console.log(e))
     }
 
+  },
+  computed: {
+    userRoles() {
+      if (this.user.roles) {
+        return this.user.roles.map(role => role.name);
+      } else return null;
+    }
+
   }
 }
 </script>
 
 <template>
   <!-- HEADER -->
-  <AppHeader @menu="setMenu" :isLogged="isLogged" />
+  <AppHeader @menu="setMenu" :isLogged="isLogged" :roles="userRoles" />
 
   <!-- JUMBOTRON -->
   <AppJumbotron />
@@ -150,7 +162,15 @@ export default {
     <!-- ADMINISTRATION -->
     <section v-if="menu === 5" class="administration pt-5">
       <h1 v-if="administration === 0" class="text-center mb-5">ADMINISTRATE YOUR APP</h1>
+
       <AdministrationPage v-if="administration.index === 0" @administration="setAdministration" />
+
+      <!-- THERAPIST MANAGEMENT -->
+      <TherapistsManagement v-if="administration.index === 1 && administration.therapists === 0"
+        @back="administration.index = 0" @add-therapist="administration.therapists = 1" />
+      <TherapistSelectForm v-if="administration.therapists === 1" @back="administration.therapists = 0" />
+
+      <!-- MASSAGE MANAGEMENT -->
       <MassageManagement v-if="administration.index === 2 && administration.massage === 0" :massages="massages"
         @back="administration.index = 0" @add-massage="administration.massage = 1" @edit-massage="editMassage"
         @refresh="fetchMassages" />
