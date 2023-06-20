@@ -14,28 +14,35 @@ import TherapistsManagement from './components/administration/therapists/Therapi
 import EmployeesCard from './components/employees/EmployeesCard.vue';
 import MassagesCard from './components/massages/MassagesCard.vue';
 import ProductCard from './components/products/ProductCard.vue';
-
+import TherapistForm from './components/administration/therapists/TherapistForm.vue';
 import TherapistSelectForm from './components/administration/therapists/TherapistSelectForm.vue';
+
+import SignInForm from './components/auth/SignInForm.vue';
 export default {
   name: "Blissful Wellness app",
   data() {
     return {
+      //MENUS
       menu: 1,
       administration: {
         index: 0,
         therapists: 0,
         massage: 0,
       },
-      massageToEdit: {},
       isLogged: false,
       logInForm: false,
+      signInForm: false,
+      //DATAS
+      massageToEdit: {},
       user: {},
       therapists: [],
+      selectedTherapist: {},
       massages: []
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm },
   methods: {
+    //menus
     setMenu(i) {
       this.menu = i;
       if (i === 2) this.fetchTherapists();
@@ -52,7 +59,8 @@ export default {
         this.fetchMassages()
       }
     },
-    //login - logout
+
+    //login - logout -signin
     logIn(user) {
       console.log(user);
       axios.post(baseApiUrl + 'login', user)
@@ -66,6 +74,15 @@ export default {
       this.isLogged = false;
       this.user = {}
     },
+    signIn(user) {
+      axios.post(baseApiUrl + 'signin', user)
+        .then(() => {
+          this.signInForm = false;
+          console.log('signin-success');
+        })
+        .catch(e => console.log(e))
+    },
+
     //fetches
     fetchTherapists() {
       axios.get(baseApiUrl + 'therapists')
@@ -77,6 +94,22 @@ export default {
         .then(res => this.massages = res.data)
         .catch(e => console.log(e))
     },
+
+    //edit annd update therapist
+    editTherapist(therapist) {
+      this.selectedTherapist = therapist;
+      this.administration.therapists = 2;
+    },
+    updateTherapist(therapist) {
+      console.log(therapist);
+      axios.put(baseApiUrl + 'therapists/update/' + therapist.userId, therapist)
+        .then(() => {
+          this.administration.therapists = 0;
+          this.fetchTherapists();
+        })
+        .catch(e => console.log(e))
+    },
+
     // add or edit massage
     massage(massage) {
       console.log(massage);
@@ -135,7 +168,7 @@ export default {
         vitae. Sunt eum minima dolor nisi culpa, quibusdam error illum dolore dolores enim.</p>
       <div class="buttons">
         <button v-if="!isLogged" class="btn btn-primary me-2" @click="logInForm = true">Login</button>
-        <button v-if="!isLogged" class="btn btn-secondary">Sign in</button>
+        <button v-if="!isLogged" class="btn btn-secondary" @click="signInForm = true">Sign in</button>
         <button v-if="isLogged" class="btn btn-secondary" @click="logOut">Log out</button>
       </div>
     </section>
@@ -167,8 +200,10 @@ export default {
 
       <!-- THERAPIST MANAGEMENT -->
       <TherapistsManagement v-if="administration.index === 1 && administration.therapists === 0"
-        @back="administration.index = 0" @add-therapist="administration.therapists = 1" />
+        @back="administration.index = 0" @add-therapist="administration.therapists = 1" @edit-therapist="editTherapist" />
       <TherapistSelectForm v-if="administration.therapists === 1" @back="administration.therapists = 0" />
+      <TherapistForm v-if="administration.therapists === 2" :user="selectedTherapist" :formState="2"
+        @back="administration.therapists = 0" @therapist="updateTherapist" />
 
       <!-- MASSAGE MANAGEMENT -->
       <MassageManagement v-if="administration.index === 2 && administration.massage === 0" :massages="massages"
@@ -184,8 +219,9 @@ export default {
   <!-- FOOTER -->
   <AppFooter />
 
-  <!-- LOG IN FORM -->
+  <!-- LOG IN AND SIGN IN FORM -->
   <LogInForm v-if="logInForm" @login="logIn" @login-close="logInForm = false" />
+  <SignInForm v-if="signInForm" @signin="signIn" @signin-close="signInForm = false" />
 </template>
 
 <style lang="scss">

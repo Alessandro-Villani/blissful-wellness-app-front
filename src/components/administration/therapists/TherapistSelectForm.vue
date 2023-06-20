@@ -65,7 +65,8 @@ export default {
             </div>
         </div>
     </div>
-    <TherapistForm v-if="formState === 1" :user="selectedUser" @back="formState = 0" @therapist="storeTherapist" />
+    <TherapistForm v-if="formState === 1" :user="selectedUser" :formState="formState" @back="formState = 0"
+        @therapist="storeTherapist" />
 </template>
 
 <style scoped lang="scss">

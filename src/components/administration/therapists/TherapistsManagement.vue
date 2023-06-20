@@ -18,7 +18,11 @@ export default {
                 .catch(e => console.log(e))
         },
         deleteTherapist(id) {
-            console.log('delete');
+            axios.delete(baseApiUrl + 'therapists/delete/' + id)
+                .then(() => {
+                    this.fetchTherapists();
+                })
+                .catch(e => console.log(e))
         }
     },
     mounted() {
@@ -45,10 +49,10 @@ export default {
                 <p class="mb-0">{{ therapist.therapistName }}</p>
             </div>
             <div class="d-flex align-items-center buttons">
-                <button class="btn btn-warning me-2" @click="$emit('edit-therapist', therapist.id)"><i
+                <button class="btn btn-warning me-2" @click="$emit('edit-therapist', therapist)"><i
                         class="fa-regular fa-pen-to-square"></i></button>
                 <button class="btn btn-danger" @click="deleteTherapist(therapist.id)"><i
-                        class="fa-regular fa-trash-can"></i></button>
+                        class="fa-solid fa-circle-down"></i></button>
             </div>
         </div>
     </div>

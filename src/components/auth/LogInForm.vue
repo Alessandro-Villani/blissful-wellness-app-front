@@ -24,7 +24,7 @@ export default {
 <template>
     <div class="overlay container d-flex align-items-center justify-content-center">
         <div class="login card p-5">
-            <form @click.prevent="logIn" class="login-foorm d-flex flex-column align-items-center">
+            <form @submit.prevent="logIn" class="login-foorm d-flex flex-column align-items-center">
                 <h3 class="mb-4">Insert your data</h3>
                 <label for="email">Username</label>
                 <input type="text" name="username" id="username" class="mb-3" v-model="user.username">

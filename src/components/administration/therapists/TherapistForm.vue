@@ -4,14 +4,29 @@ export default {
     data() {
         return {
             therapist: {
-                therapistName: '',
-                description: '',
+                therapistName: this.formState === 2 ? this.user.therapistName : '',
+                description: this.formState === 2 ? this.user.description : '',
                 userId: this.user.id
             }
         }
     },
+    computed: {
+        profilePicUrl() {
+            return this.formState === 2 ? this.user.user.profilePic : this.user.profilePic;
+        },
+        firstName() {
+            return this.formState === 2 ? this.user.user.firstName : this.user.firstName;
+        },
+        lastName() {
+            return this.formState === 2 ? this.user.user.lastName : this.user.lastName;
+        },
+        userName() {
+            return this.formState === 2 ? this.user.user.username : this.user.username;
+        }
+    },
     props: {
-        user: Object
+        user: Object,
+        formState: Number
     },
     emits: ['back', 'therapist']
 }
@@ -20,12 +35,13 @@ export default {
 <template>
     <form @submit.prevent="$emit('therapist', therapist)">
         <div class="card p-5 d-flex flex-column align-items-center">
-            <h2 class="text-center mb-3">PROMOTE {{ user.username.toUpperCase() }} TO THERAPIST</h2>
-            <img :src="user.profilePic" :alt="user.username" class="user-pic rounded-circle img-fluid border mb-3">
+            <h2 class="text-center mb-3"><span v-if="formState === 1">PROMOTE {{ user.username.toUpperCase() }}
+                    TO</span><span>EDIT</span> THERAPIST</h2>
+            <img :src="profilePicUrl" :alt="userName" class="user-pic rounded-circle img-fluid border mb-3">
             <label for="firstname">First name</label>
-            <input class="mb-3" type="text" name="firstname" id="firstname" :value="user.firstName" disabled>
+            <input class="mb-3" type="text" name="firstname" id="firstname" :value="firstName" disabled>
             <label for="lastname">Last name</label>
-            <input class="mb-3" type="text" name="lastname" id="lastname" :value="user.lastName" disabled>
+            <input class="mb-3" type="text" name="lastname" id="lastname" :value="lastName" disabled>
             <label for="therapistName">Name as Therapist</label>
             <input class="mb-3" type="text" name="therapistName" id="therapistName" v-model="therapist.therapistName">
             <label for="description">Description</label>
