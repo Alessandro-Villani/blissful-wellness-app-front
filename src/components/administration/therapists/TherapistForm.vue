@@ -36,7 +36,7 @@ export default {
     <form @submit.prevent="$emit('therapist', therapist)">
         <div class="card p-5 d-flex flex-column align-items-center">
             <h2 class="text-center mb-3"><span v-if="formState === 1">PROMOTE {{ user.username.toUpperCase() }}
-                    TO</span><span>EDIT</span> THERAPIST</h2>
+                    TO</span><span v-else>EDIT</span> THERAPIST</h2>
             <img :src="profilePicUrl" :alt="userName" class="user-pic rounded-circle img-fluid border mb-3">
             <label for="firstname">First name</label>
             <input class="mb-3" type="text" name="firstname" id="firstname" :value="firstName" disabled>

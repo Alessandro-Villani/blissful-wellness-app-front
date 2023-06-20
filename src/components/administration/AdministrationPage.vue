@@ -20,8 +20,8 @@ export default {
             </div>
         </div>
         <div class="col-12 mb-3">
-            <div class="card p-5 d-flex align-items-center justify-content-center">
-                <i class="fa-solid fa-jar fa-3x mb-3"></i>
+            <div class="card p-5 d-flex align-items-center justify-content-center" @click="$emit('administration', 3)">
+                <i class=" fa-solid fa-jar fa-3x mb-3"></i>
                 <h4 class="mb-0">Products</h4>
             </div>
         </div>

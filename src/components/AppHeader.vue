@@ -63,7 +63,7 @@ header {
     height: 75px;
     left: 0;
     right: 0;
-    z-index: 2;
+    z-index: 3;
     box-shadow: 0 0 30px black;
 
     .logo {

@@ -10,7 +10,7 @@ export default {
             therapists: []
         }
     },
-    emits: ['back', 'add-therapist', 'edit-therapist', 'refresh'],
+    emits: ['back', 'add-therapist', 'edit-therapist'],
     methods: {
         fetchTherapists() {
             axios.get(baseApiUrl + 'therapists')

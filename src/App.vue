@@ -16,6 +16,8 @@ import MassagesCard from './components/massages/MassagesCard.vue';
 import ProductCard from './components/products/ProductCard.vue';
 import TherapistForm from './components/administration/therapists/TherapistForm.vue';
 import TherapistSelectForm from './components/administration/therapists/TherapistSelectForm.vue';
+import ProductsManagement from './components/administration/products/ProductsManagement.vue';
+import ProductForm from './components/administration/products/ProductForm.vue';
 
 import SignInForm from './components/auth/SignInForm.vue';
 export default {
@@ -28,29 +30,34 @@ export default {
         index: 0,
         therapists: 0,
         massage: 0,
+        products: 0
       },
       isLogged: false,
       logInForm: false,
       signInForm: false,
       //DATAS
-      massageToEdit: {},
-      user: {},
       therapists: [],
+      massages: [],
+      products: [],
+      user: {},
+      massageToEdit: {},
       selectedTherapist: {},
-      massages: []
+      productToEdit: {},
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm },
   methods: {
     //menus
     setMenu(i) {
       this.menu = i;
       if (i === 2) this.fetchTherapists();
       if (i === 3) this.fetchMassages();
+      if (i === 4) this.fetchProducts();
       if (i === 5) {
         this.administration.index = 0;
         this.administration.therapists = 0;
         this.administration.massage = 0;
+        this.administration.products = 0;
       }
     },
     setAdministration(i) {
@@ -94,7 +101,11 @@ export default {
         .then(res => this.massages = res.data)
         .catch(e => console.log(e))
     },
-
+    fetchProducts() {
+      axios.get(baseApiUrl + 'products')
+        .then(res => this.products = res.data)
+        .catch(e => console.log(e))
+    },
     //edit annd update therapist
     editTherapist(therapist) {
       this.selectedTherapist = therapist;
@@ -136,7 +147,34 @@ export default {
           this.administration.massage = 2;
         })
         .catch(e => console.log(e))
-    }
+    },
+
+    // add or edit product
+    product(product) {
+      if (!product.isEdit) {
+        axios.post(baseApiUrl + 'products/store', product.product)
+          .then(() => {
+            this.administration.products = 0;
+            this.fetchProducts;
+          })
+          .catch(e => console.log(e))
+      } else {
+        axios.put(baseApiUrl + 'products/update/' + product.id, product.product)
+          .then(() => {
+            this.administration.products = 0;
+            this.fetchProducts();
+          })
+          .catch(e => console.log(e))
+      }
+    },
+    editProduct(id) {
+      axios.get(baseApiUrl + 'products/' + id)
+        .then(res => {
+          this.productToEdit = res.data;
+          this.administration.products = 2;
+        })
+        .catch(e => console.log(e))
+    },
 
   },
   computed: {
@@ -155,8 +193,8 @@ export default {
   <AppHeader @menu="setMenu" :isLogged="isLogged" :roles="userRoles" />
 
   <!-- JUMBOTRON -->
-  <AppJumbotron />
-  <main class="container">
+  <AppJumbotron v-if="menu === 1" />
+  <main class="container" :class="menu != 1 ? 'no-jumbo' : ''">
 
     <!-- HOME -->
     <section v-if="menu === 1" class="home text-center pt-5">
@@ -189,7 +227,7 @@ export default {
     <!-- PRODUCTS -->
     <section v-if="menu === 4" class="products pt-5">
       <h1 class="text-center mb-5">OUR PRODUCTS</h1>
-      <ProductCard v-for="i in 5" />
+      <ProductCard v-for="product in products" :product="product" />
     </section>
 
     <!-- ADMINISTRATION -->
@@ -213,6 +251,13 @@ export default {
         :isEdit="administration.massage === 2 ? true : false"
         :existingMassage="administration.massage === 2 ? massageToEdit : null" @back="administration.massage = 0"
         @massage="massage" />
+
+      <!-- PRODUCTS MANAGEMENT -->
+      <ProductsManagement v-if="administration.index === 3 && administration.products === 0"
+        @back="administration.index = 0" @add-product="administration.products = 1" @edit-product="editProduct" />
+      <ProductForm v-if="administration.products === 1 || administration.products === 2"
+        @back="administration.products = 0" :formType="administration.products"
+        :existingProduct="administration.products === 2 ? productToEdit : null" @product="product" />
     </section>
   </main>
 
@@ -229,5 +274,9 @@ export default {
 
 main {
   min-height: calc(100vh - 335px);
+
+  &.no-jumbo {
+    min-height: calc(100vh - 135px);
+  }
 }
 </style>
