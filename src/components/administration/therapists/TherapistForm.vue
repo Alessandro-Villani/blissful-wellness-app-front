@@ -6,8 +6,9 @@ export default {
             therapist: {
                 therapistName: this.formState === 2 ? this.user.therapistName : '',
                 description: this.formState === 2 ? this.user.description : '',
-                userId: this.user.id
-            }
+                userId: this.user.id,
+                massages: this.formState === 2 ? this.user.massages.map(massage => massage.id) : [],
+            },
         }
     },
     computed: {
@@ -22,13 +23,28 @@ export default {
         },
         userName() {
             return this.formState === 2 ? this.user.user.username : this.user.username;
-        }
+        },
     },
     props: {
         user: Object,
+        massages: Array,
         formState: Number
     },
-    emits: ['back', 'therapist']
+    emits: ['back', 'therapist'],
+    methods: {
+        isChecked(massage) {
+            const massagesIds = this.therapist.massages.map(massage => massage.id)
+            return massagesIds.includes(massage.id);
+        },
+        selectAll() {
+            const massagesId = this.massages.map(massage => massage.id);
+            massagesId.forEach(id => {
+                if (!this.therapist.massages.includes(id)) {
+                    this.therapist.massages.push(id);
+                }
+            })
+        }
+    }
 }
 </script>
 
@@ -46,6 +62,15 @@ export default {
             <input class="mb-3" type="text" name="therapistName" id="therapistName" v-model="therapist.therapistName">
             <label for="description">Description</label>
             <textarea class="mb-3" name="description" id="description" rows="10" v-model="therapist.description"></textarea>
+            <h4 class="text-center mb-2">Select massages:</h4>
+            <button type="button" class="btn btn-primary mb-3" @click="selectAll()">SELECT ALL</button>
+            <div class="massages row border rounded-2 p-3 mb-4">
+                <div class="col-6" v-for="massage in massages">
+                    <input class="me-2" type="checkbox" :value="massage.id" :id="'massage' + massage.id"
+                        :checked="isChecked(massage)" v-model="therapist.massages"><label :for="'massage' + massage.id">{{
+                            massage.name }}</label>
+                </div>
+            </div>
             <div class="buttons d-flex col-12 justify-content-center">
                 <button type="button" class="btn btn-secondary back" @click="$emit('back')"><i
                         class="fa-solid fa-arrow-left"></i></button>
@@ -70,5 +95,10 @@ export default {
         position: absolute;
         left: 0;
     }
+}
+
+.massages {
+    max-height: 100px;
+    overflow-y: auto;
 }
 </style>

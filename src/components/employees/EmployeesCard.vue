@@ -60,7 +60,7 @@ export default {
 
     <!-- CARD -->
     <div class="employee-card mb-0 row align-items-center" :class="index % 2 === 0 ? 'flex-row-reverse' : 'flex-row'">
-        <div class="col-5 d-flex flex-column align-items-center justify-content-center">
+        <div class="col-5 d-flex flex-column align-items-center justify-content-center mb-3">
             <div class="col-12 d-flex flex-column justify-content-between align-items-center">
                 <h4 class="mb-3">{{ therapist.therapistName }}</h4>
             </div>
@@ -79,6 +79,13 @@ export default {
                 {{ therapist.description }}
             </p>
         </div>
+        <div class="col-12">
+            <div class="massages row mb-2 justify-content-center">
+                <div class="col-4 mb-2" v-for="massage in therapist.massages">
+                    <div class="rounded-pill p-1" :style="{ backgroundColor: massage.color }">{{ massage.name }}</div>
+                </div>
+            </div>
+        </div>
 
         <!-- REVIEWS SECTION -->
         <div class="col-12 reviews d-flex flex-column mt-3">
@@ -87,12 +94,13 @@ export default {
                 reviews</button>
             <div v-if="reviewsShow" class="reviews-conteiner">
                 <div class="reviews-content border rounded-2 p-2 mb-3" ref="reviewContent">
-                    <div v-if="therapist.reviews.length" class="row border-bottom mb-3" v-for="review in therapist.reviews">
+                    <div v-if="therapist.reviews.length" class="row border-bottom mb-3"
+                        v-for="  review   in   therapist.reviews  ">
                         <div class="col-12 text-center">
                             <p class="mb-1">{{ review.author.username }}</p>
                         </div>
                         <div class="col-12 text-center">
-                            <p class="mb-3"><i v-for="i in 5" :key="i" class="fa-star"
+                            <p class="mb-3"><i v-for="  i   in   5  " :key="i" class="fa-star"
                                     :class="i <= review.grade ? 'fa-solid' : 'fa-regular'"></i></p>
                         </div>
                         <div class="col-12">
@@ -108,7 +116,7 @@ export default {
                     <!-- REVIEW FORM -->
                     <form @submit.prevent="postReview" v-if="addReviewShow" class="review-creation d-flex flex-column">
                         <h4 class="mb-3">Insert your review</h4>
-                        <p class="mb-3">Rating: <i v-for="i in 5" :key="i" class="fa-star"
+                        <p class="mb-3">Rating: <i v-for="  i   in   5  " :key="i" class="fa-star"
                                 :class="i <= review.grade ? 'fa-solid' : 'fa-regular'" @click="review.grade = i"></i></p>
                         <label for="review">Review</label>
                         <textarea class="mb-2" name="review" id="review" v-model="review.review"></textarea>
@@ -181,6 +189,14 @@ svg {
             overflow-x: hidden;
             font-size: 12px;
 
+        }
+    }
+
+    .massages {
+        div {
+            font-size: 10px;
+            font-weight: bolder;
+            text-align: center;
         }
     }
 

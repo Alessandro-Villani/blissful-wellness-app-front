@@ -28,7 +28,7 @@ export default {
 </script>
 
 <template>
-    <header>
+    <header :class="isLogged ? 'logged' : ''">
         <nav class="nav-top d-flex align-items-center">
             <nav class="container d-flex justify-content-between align-items-center">
                 <nav class="nav-left p-2">
@@ -52,6 +52,16 @@ export default {
             <a class="mb-0 py-1" @click="menuClick(4)">Products</a>
             <a v-if="isLogged && roles.includes('admin')" class="mb-0 py-1" @click="menuClick(5)">Administration</a>
         </nav>
+        <nav v-if="isLogged" class="nav-bottom d-flex align-items-center">
+            <div class="col-3 d-flex flex-column align-items-center justify-content-center"><i
+                    class="fa-solid fa-house"></i></div>
+            <div class="col-3 d-flex flex-column align-items-center justify-content-center"><i
+                    class="fa-solid fa-person"></i></div>
+            <div class="col-3 d-flex flex-column align-items-center justify-content-center"><i
+                    class="fa-solid fa-hand-sparkles"></i></div>
+            <div class="col-3 d-flex flex-column align-items-center justify-content-center"><i class="fa-solid fa-jar"></i>
+            </div>
+        </nav>
     </header>
 </template>
 
@@ -65,6 +75,15 @@ header {
     right: 0;
     z-index: 3;
     box-shadow: 0 0 30px black;
+
+    &.logged {
+        height: 115px;
+
+        .nav-top {
+            height: 75%;
+
+        }
+    }
 
     .logo {
         width: 55px;
@@ -87,6 +106,7 @@ header {
 
     .nav-top {
         height: 100%;
+
     }
 
     .nav-left {
@@ -98,6 +118,9 @@ header {
 
     }
 
+    .nav-bottom {
+        color: white;
+    }
 
     .cs-btn-primary {
 

@@ -15,6 +15,9 @@ export default {
         }
     },
     components: { TherapistForm },
+    props: {
+        massages: Array,
+    },
     emits: ['back'],
     methods: {
         fetchUsers() {
@@ -66,7 +69,7 @@ export default {
         </div>
     </div>
     <TherapistForm v-if="formState === 1" :user="selectedUser" :formState="formState" @back="formState = 0"
-        @therapist="storeTherapist" />
+        @therapist="storeTherapist" :massages="massages" />
 </template>
 
 <style scoped lang="scss">

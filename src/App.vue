@@ -62,7 +62,7 @@ export default {
     },
     setAdministration(i) {
       this.administration.index = i;
-      if (i === 2) {
+      if (i === 1 || i === 2) {
         this.fetchMassages()
       }
     },
@@ -182,6 +182,12 @@ export default {
       if (this.user.roles) {
         return this.user.roles.map(role => role.name);
       } else return null;
+    },
+    mainClasses() {
+      let classes = '';
+      if (this.menu != 1) classes += 'no-jumbo';
+      if (this.isLogged) classes += ' logged';
+      return classes;
     }
 
   }
@@ -194,7 +200,7 @@ export default {
 
   <!-- JUMBOTRON -->
   <AppJumbotron v-if="menu === 1" />
-  <main class="container" :class="menu != 1 ? 'no-jumbo' : ''">
+  <main class="container" :class="mainClasses">
 
     <!-- HOME -->
     <section v-if="menu === 1" class="home text-center pt-5">
@@ -239,9 +245,10 @@ export default {
       <!-- THERAPIST MANAGEMENT -->
       <TherapistsManagement v-if="administration.index === 1 && administration.therapists === 0"
         @back="administration.index = 0" @add-therapist="administration.therapists = 1" @edit-therapist="editTherapist" />
-      <TherapistSelectForm v-if="administration.therapists === 1" @back="administration.therapists = 0" />
+      <TherapistSelectForm v-if="administration.therapists === 1" @back="administration.therapists = 0"
+        :massages="massages" />
       <TherapistForm v-if="administration.therapists === 2" :user="selectedTherapist" :formState="2"
-        @back="administration.therapists = 0" @therapist="updateTherapist" />
+        @back="administration.therapists = 0" @therapist="updateTherapist" :massages="massages" />
 
       <!-- MASSAGE MANAGEMENT -->
       <MassageManagement v-if="administration.index === 2 && administration.massage === 0" :massages="massages"
@@ -262,7 +269,7 @@ export default {
   </main>
 
   <!-- FOOTER -->
-  <AppFooter />
+  <AppFooter :isLogged="isLogged" :roles="userRoles" />
 
   <!-- LOG IN AND SIGN IN FORM -->
   <LogInForm v-if="logInForm" @login="logIn" @login-close="logInForm = false" />
@@ -275,8 +282,16 @@ export default {
 main {
   min-height: calc(100vh - 335px);
 
+  &.logged {
+    min-height: calc(100vh - 375px);
+  }
+
   &.no-jumbo {
     min-height: calc(100vh - 135px);
+
+    &.logged {
+      min-height: calc(100vh - 175px);
+    }
   }
 }
 </style>

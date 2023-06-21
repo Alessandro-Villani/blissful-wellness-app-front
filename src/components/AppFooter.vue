@@ -1,13 +1,18 @@
 <script>
 export default {
-    name: 'App Footer'
+    name: 'App Footer',
+    props: {
+        isLogged: Boolean,
+        roles: Array,
+    }
+
 }
 </script>
 
 <template>
     <footer>
         <div class="container h-100">
-            <nav class="row align-items-center h-100">
+            <nav v-if="!isLogged" class="row align-items-center h-100">
                 <div class="col-3 text-center">
                     <i class="fa-brands fa-whatsapp"></i>
                     <address>+63 955 843 9963</address>
@@ -20,6 +25,29 @@ export default {
                 <div class="col-3 text-center">
                     <a href="https://www.facebook.com/profile.php?id=100075865136535"><i
                             class="fa-brands fa-facebook"></i></a>
+                </div>
+            </nav>
+            <nav v-if="isLogged" class="logged-footer row h-100 justify-content-around">
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                    <i class="fa-solid fa-user mb-1"></i>
+                    <small>Profile</small>
+                </div>
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                    <i class="fa-solid fa-envelope mb-1"></i>
+                    <small>Mail</small>
+                </div>
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                    <i class="fa-solid fa-calendar mb-1"></i>
+                    <small>Bookings</small>
+                </div>
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                    <i class="fa-solid fa-cart-shopping mb-1"></i>
+                    <small>Orders</small>
+                </div>
+                <div v-if="roles.includes('admin')"
+                    class="col-2 d-flex flex-column align-items-center justify-content-center">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    <small>Manage</small>
                 </div>
             </nav>
         </div>
@@ -49,6 +77,18 @@ footer {
     a {
         color: white;
         text-decoration: none;
+    }
+
+    .logged-footer {
+
+        i {
+            font-size: 20px;
+        }
+
+        small {
+            font-size: 12px;
+        }
+
     }
 }
 </style>

@@ -10,7 +10,8 @@ export default {
                 massage: {
                     name: this.isEdit ? this.existingMassage.name : '',
                     description: this.isEdit ? this.existingMassage.description : '',
-                    pricePerHour: this.isEdit ? this.existingMassage.pricePerHour : 0
+                    pricePerHour: this.isEdit ? this.existingMassage.pricePerHour : 0,
+                    color: this.isEdit ? this.existingMassage.color : "#000000"
                 }
             }
         }
@@ -35,6 +36,8 @@ export default {
                 v-model="massage.massage.description"></textarea>
             <label for="price">Price</label>
             <input class="mb-4" type="number" name="price" id="price" v-model="massage.massage.pricePerHour">
+            <label for="color">Color</label>
+            <input class="mb-4" type="color" name="color" id="color" v-model="massage.massage.color">
             <div class="buttons d-flex col-12 justify-content-center">
                 <button type="button" class="btn btn-secondary back" @click="$emit('back')"><i
                         class="fa-solid fa-arrow-left"></i></button>
