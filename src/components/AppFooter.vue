@@ -4,7 +4,18 @@ export default {
     props: {
         isLogged: Boolean,
         roles: Array,
-    }
+        menuState: Number,
+    },
+    methods: {
+        menuClick(i) {
+            this.$emit('menu', i);
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            })
+        }
+    },
+    emits: ['menu']
 
 }
 </script>
@@ -44,8 +55,9 @@ export default {
                     <i class="fa-solid fa-cart-shopping mb-1"></i>
                     <small>Orders</small>
                 </div>
-                <div v-if="roles.includes('admin')"
-                    class="col-2 d-flex flex-column align-items-center justify-content-center">
+                <div v-if="isLogged && roles.includes('admin')" @click="menuClick(5)"
+                    class="col-2 d-flex flex-column align-items-center justify-content-center"
+                    :class="menuState === 5 ? 'selected' : ''">
                     <i class="fa-solid fa-screwdriver-wrench"></i>
                     <small>Manage</small>
                 </div>
@@ -87,6 +99,11 @@ footer {
 
         small {
             font-size: 12px;
+        }
+
+        .selected {
+            color: rgb(253, 1, 165);
+
         }
 
     }

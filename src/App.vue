@@ -18,6 +18,7 @@ import TherapistForm from './components/administration/therapists/TherapistForm.
 import TherapistSelectForm from './components/administration/therapists/TherapistSelectForm.vue';
 import ProductsManagement from './components/administration/products/ProductsManagement.vue';
 import ProductForm from './components/administration/products/ProductForm.vue';
+import OrderForm from './components/orders/OrderForm.vue';
 
 import SignInForm from './components/auth/SignInForm.vue';
 export default {
@@ -35,6 +36,7 @@ export default {
       isLogged: false,
       logInForm: false,
       signInForm: false,
+      orderForm: false,
       //DATAS
       therapists: [],
       massages: [],
@@ -43,9 +45,10 @@ export default {
       massageToEdit: {},
       selectedTherapist: {},
       productToEdit: {},
+      productToPurchase: {}
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm },
   methods: {
     //menus
     setMenu(i) {
@@ -79,7 +82,8 @@ export default {
     },
     logOut() {
       this.isLogged = false;
-      this.user = {}
+      this.user = {};
+      this.menu = 1;
     },
     signIn(user) {
       axios.post(baseApiUrl + 'signin', user)
@@ -176,6 +180,20 @@ export default {
         .catch(e => console.log(e))
     },
 
+    // purchase orders
+    openOrderForm(product) {
+      this.productToPurchase = product;
+      this.orderForm = true;
+    },
+    emitOrder(order) {
+      axios.post(baseApiUrl + 'purchaseorders/store', order)
+        .then(() => {
+          console.log('order successfull')
+          this.orderForm = false;
+          this.fetchProducts();
+        })
+        .catch(e => console.log(e))
+    }
   },
   computed: {
     userRoles() {
@@ -196,7 +214,8 @@ export default {
 
 <template>
   <!-- HEADER -->
-  <AppHeader @menu="setMenu" :isLogged="isLogged" :roles="userRoles" />
+  <AppHeader :isLogged="isLogged" :roles="userRoles" :menuState="menu" :user="user" @menu="setMenu"
+    @login-form="logInForm = true" @signin-form="signInForm = true" @logout="logOut" />
 
   <!-- JUMBOTRON -->
   <AppJumbotron v-if="menu === 1" />
@@ -210,12 +229,8 @@ export default {
       <p class="mb-5">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Distinctio id possimus eum dicta porro,
         impedit iure in
         vitae. Sunt eum minima dolor nisi culpa, quibusdam error illum dolore dolores enim.</p>
-      <div class="buttons">
-        <button v-if="!isLogged" class="btn btn-primary me-2" @click="logInForm = true">Login</button>
-        <button v-if="!isLogged" class="btn btn-secondary" @click="signInForm = true">Sign in</button>
-        <button v-if="isLogged" class="btn btn-secondary" @click="logOut">Log out</button>
-      </div>
     </section>
+
 
     <!-- THERAPISTS -->
     <section v-if="menu === 2" class="therapists pt-5">
@@ -233,7 +248,7 @@ export default {
     <!-- PRODUCTS -->
     <section v-if="menu === 4" class="products pt-5">
       <h1 class="text-center mb-5">OUR PRODUCTS</h1>
-      <ProductCard v-for="product in products" :product="product" />
+      <ProductCard v-for="product in products" :product="product" @order-form="openOrderForm" />
     </section>
 
     <!-- ADMINISTRATION -->
@@ -269,11 +284,13 @@ export default {
   </main>
 
   <!-- FOOTER -->
-  <AppFooter :isLogged="isLogged" :roles="userRoles" />
+  <AppFooter :isLogged="isLogged" :roles="userRoles" :menuState="menu" @menu="setMenu" />
 
-  <!-- LOG IN AND SIGN IN FORM -->
+  <!-- FORMS -->
   <LogInForm v-if="logInForm" @login="logIn" @login-close="logInForm = false" />
   <SignInForm v-if="signInForm" @signin="signIn" @signin-close="signInForm = false" />
+  <OrderForm v-if="orderForm" :user-id="user.id" :product="productToPurchase" @order-form-close="orderForm = false"
+    @emit-order="emitOrder" />
 </template>
 
 <style lang="scss">
@@ -283,14 +300,14 @@ main {
   min-height: calc(100vh - 335px);
 
   &.logged {
-    min-height: calc(100vh - 375px);
+    min-height: calc(100vh - 390px);
   }
 
   &.no-jumbo {
-    min-height: calc(100vh - 135px);
+    min-height: calc(100vh - 155px);
 
     &.logged {
-      min-height: calc(100vh - 175px);
+      min-height: calc(100vh - 190px);
     }
   }
 }

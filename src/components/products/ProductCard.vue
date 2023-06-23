@@ -3,7 +3,8 @@ export default {
     name: 'Product Card',
     props: {
         product: Object,
-    }
+    },
+    emits: ['order-form']
 }
 </script>
 
@@ -17,7 +18,8 @@ export default {
             <p class="description">{{ product.description }}</p>
             <div class="buy d-flex justify-content-around align-items-center">
                 <p class="price mb-0"><b class="me-1">Price:</b> ₱{{ product.price }}</p>
-                <button class="btn btn-primary" :disabled="product.stockQuantity < 1">Order</button>
+                <button class="btn btn-primary" :disabled="product.stockQuantity < 1"
+                    @click="$emit('order-form', product)">Order</button>
             </div>
         </div>
         <div class="out-of-stock p-2" v-if="product.stockQuantity < 1"><b>OUT OF STOCK</b></div>
