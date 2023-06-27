@@ -51,7 +51,8 @@ export default {
                     <i class="fa-solid fa-calendar mb-1"></i>
                     <small>Bookings</small>
                 </div>
-                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(6)"
+                    :class="menuState === 6 ? 'selected' : ''">
                     <i class="fa-solid fa-cart-shopping mb-1"></i>
                     <small>Orders</small>
                 </div>

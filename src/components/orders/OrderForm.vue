@@ -69,7 +69,7 @@ export default {
 <style scoped lang="scss">
 .overlay {
     background-color: rgba($color: #000000, $alpha: 0.5);
-    position: absolute;
+    position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
@@ -82,6 +82,8 @@ export default {
         img {
             width: 120px;
             height: 120px;
+            object-fit: contain;
+            object-position: center;
         }
 
         .btn-closure {

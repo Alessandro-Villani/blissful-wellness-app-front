@@ -12,7 +12,7 @@ export default {
     <div class="product-card row mb-5 position-relative">
         <div class="col-4 d-flex flex-column justify-content-between align-items-center text-center">
             <h4>{{ product.name.toUpperCase() }}</h4>
-            <img class="img-fluid" :src="product.imageUrl" :alt="product.name">
+            <img class="product-pic" :src="product.imageUrl" :alt="product.name">
         </div>
         <div class="col-8 col-4 d-flex flex-column justify-content-between">
             <p class="description">{{ product.description }}</p>
@@ -27,6 +27,13 @@ export default {
 </template>
 
 <style scoped lang="scss">
+.product-pic {
+    height: 100px;
+    width: 100px;
+    object-fit: contain;
+    object-position: center;
+}
+
 h4 {
     font-size: 16px;
 }

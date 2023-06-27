@@ -44,13 +44,6 @@ export default {
                 </nav>
             </nav>
         </nav>
-        <nav v-if="menuIsOpen" class="menu-window text-center mb-0">
-            <a class="mb-0 py-1" @click="menuClick(1)">Home</a>
-            <a class="mb-0 py-1" @click="menuClick(2)">Therapists</a>
-            <a class="mb-0 py-1" @click="menuClick(3)">Massages</a>
-            <a class="mb-0 py-1" @click="menuClick(4)">Products</a>
-            <a v-if="isLogged && roles.includes('admin')" class="mb-0 py-1" @click="menuClick(5)">Administration</a>
-        </nav>
         <nav v-if="isLogged" class="nav-bottom d-flex align-items-center">
             <div class="col-3 d-flex flex-column align-items-center justify-content-center" @click="menuClick(1)"
                 :class="menuState === 1 ? 'selected' : ''">

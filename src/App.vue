@@ -19,6 +19,8 @@ import TherapistSelectForm from './components/administration/therapists/Therapis
 import ProductsManagement from './components/administration/products/ProductsManagement.vue';
 import ProductForm from './components/administration/products/ProductForm.vue';
 import OrderForm from './components/orders/OrderForm.vue';
+import OrderCard from './components/orders/OrderCard.vue';
+import SwitchBar from './components/generics/SwitchBar.vue';
 
 import SignInForm from './components/auth/SignInForm.vue';
 export default {
@@ -42,13 +44,16 @@ export default {
       massages: [],
       products: [],
       user: {},
+      orders: {},
       massageToEdit: {},
       selectedTherapist: {},
       productToEdit: {},
-      productToPurchase: {}
+      productToPurchase: {},
+      //FILTERS
+      ordersFilter: 'All',
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar },
   methods: {
     //menus
     setMenu(i) {
@@ -62,6 +67,8 @@ export default {
         this.administration.massage = 0;
         this.administration.products = 0;
       }
+      if (i === 6 && this.isAdmin) this.fetchOrders();
+      if (i === 6 && !this.isAdmin) this.fetchUser();
     },
     setAdministration(i) {
       this.administration.index = i;
@@ -108,6 +115,16 @@ export default {
     fetchProducts() {
       axios.get(baseApiUrl + 'products')
         .then(res => this.products = res.data)
+        .catch(e => console.log(e))
+    },
+    fetchUser() {
+      axios.get(baseApiUrl + 'users/' + this.user.id)
+        .then(res => this.user = res.data)
+        .catch(e => console.log(e))
+    },
+    fetchOrders() {
+      axios.get(baseApiUrl + 'purchaseorders')
+        .then(res => this.orders = res.data)
         .catch(e => console.log(e))
     },
     //edit annd update therapist
@@ -191,21 +208,84 @@ export default {
           console.log('order successfull')
           this.orderForm = false;
           this.fetchProducts();
+          this.fetchUser();
+          this.setMenu(6);
         })
         .catch(e => console.log(e))
-    }
+    },
+    setOrdersFilter(filter) {
+      this.ordersFilter = filter;
+    },
+    refreshOrdersHandledBy(role) {
+      if (role === 'user') this.fetchUser();
+      if (role === 'admin') this.fetchOrders();
+    },
   },
   computed: {
+    //ROLES AND MENU
     userRoles() {
       if (this.user.roles) {
         return this.user.roles.map(role => role.name);
       } else return null;
+    },
+    isAdmin() {
+      return this.userRoles.includes("admin");
     },
     mainClasses() {
       let classes = '';
       if (this.menu != 1) classes += 'no-jumbo';
       if (this.isLogged) classes += ' logged';
       return classes;
+    },
+    //PURCHASE ORDERS
+    noOrders() {
+      const noOrders = !this.user.orders.length && !this.orders.length;
+      return noOrders;
+    },
+    filteredOrders() {
+      this.fetchOrders();
+      let orders = this.orders;
+      switch (this.ordersFilter) {
+        case 'Pending':
+          orders = orders.filter(order => !order.accepted && !order.rejected && !order.canceled);
+          return orders;
+        case 'Accepted':
+          orders = orders.filter(order => order.accepted && !order.delivered && !order.canceled);
+          return orders;
+        case 'Declined':
+          orders = orders.filter(order => order.rejected);
+          return orders;
+        case 'Archived':
+          orders = orders.filter(order => order.delivered);
+          return orders;
+        case 'Canceled':
+          orders = orders.filter(order => order.canceled);
+          return orders;
+        default:
+          return orders;
+      }
+    },
+    filteredUserOrders() {
+      if (this.user.id) {
+        this.fetchUser();
+        let orders = this.user.orders.filter(order => !order.canceled);
+        switch (this.ordersFilter) {
+          case 'Pending':
+            orders = orders.filter(order => !order.accepted && !order.rejected);
+            return orders;
+          case 'Accepted':
+            orders = orders.filter(order => order.accepted && !order.delivered);
+            return orders;
+          case 'Declined':
+            orders = orders.filter(order => order.rejected);
+            return orders;
+          case 'Delivered':
+            orders = orders.filter(order => order.delivered);
+            return orders;
+          default:
+            return orders;
+        }
+      } else return null
     }
 
   }
@@ -280,6 +360,27 @@ export default {
       <ProductForm v-if="administration.products === 1 || administration.products === 2"
         @back="administration.products = 0" :formType="administration.products"
         :existingProduct="administration.products === 2 ? productToEdit : null" @product="product" />
+    </section>
+
+    <!-- ORDERS -->
+    <section v-if="menu === 6" class="purchase-orders d-flex flex-column align-items-center justify-content-center pt-5">
+      <!-- NO ORDERS -->
+      <div v-if="noOrders">
+        <h2 class="text-center mb-5">No Orders</h2>
+        <button v-if="!isAdmin" class="btn btn-primary" @click="setMenu(4)">Check our products</button>
+      </div>
+      <!-- USER ORDERS -->
+      <SwitchBar v-if="!noOrders"
+        :menus="!isAdmin ? ['All', 'Pending', 'Accepted', 'Declined', 'Delivered'] : ['All', 'Pending', 'Accepted', 'Declined', 'Archived', 'Canceled']"
+        :selectedMenu="ordersFilter" @switch="setOrdersFilter" />
+      <div v-if="!isAdmin && !noOrders" class="customer row">
+        <OrderCard v-for="order in filteredUserOrders" :purchaseOrder="order" :forAdmin="isAdmin"
+          @order-handled="refreshOrdersHandledBy" />
+      </div>
+      <div v-if="isAdmin && !noOrders" class="customer row">
+        <OrderCard v-for="order in filteredOrders" :purchaseOrder="order" :forAdmin="isAdmin"
+          @order-handled="refreshOrdersHandledBy" />
+      </div>
     </section>
   </main>
 
