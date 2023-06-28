@@ -21,6 +21,7 @@ import ProductForm from './components/administration/products/ProductForm.vue';
 import OrderForm from './components/orders/OrderForm.vue';
 import OrderCard from './components/orders/OrderCard.vue';
 import SwitchBar from './components/generics/SwitchBar.vue';
+import BookingCalendar from './components/bookings/BookingCalendar.vue';
 
 import SignInForm from './components/auth/SignInForm.vue';
 export default {
@@ -29,6 +30,7 @@ export default {
     return {
       //MENUS
       menu: 1,
+      massageMenu: 0,
       administration: {
         index: 0,
         therapists: 0,
@@ -46,6 +48,7 @@ export default {
       user: {},
       orders: {},
       massageToEdit: {},
+      massageToBook: {},
       selectedTherapist: {},
       productToEdit: {},
       productToPurchase: {},
@@ -53,13 +56,16 @@ export default {
       ordersFilter: 'All',
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar },
   methods: {
     //menus
     setMenu(i) {
       this.menu = i;
       if (i === 2) this.fetchTherapists();
-      if (i === 3) this.fetchMassages();
+      if (i === 3) {
+        this.massageMenu = 0;
+        this.fetchMassages();
+      }
       if (i === 4) this.fetchProducts();
       if (i === 5) {
         this.administration.index = 0;
@@ -75,6 +81,10 @@ export default {
       if (i === 1 || i === 2) {
         this.fetchMassages()
       }
+    },
+    openMassageBooking(massage) {
+      this.massageToBook = massage;
+      this.massageMenu = 1;
     },
 
     //login - logout -signin
@@ -321,8 +331,12 @@ export default {
 
     <!-- MASSAGES -->
     <section v-if="menu === 3" class="massages pt-5">
-      <h1 class="text-center mb-5">OUR MASSAGES</h1>
-      <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage" />
+      <div v-if="massageMenu === 0" class="massage-list">
+        <h1 class="text-center mb-5">OUR MASSAGES</h1>
+        <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage"
+          @book="openMassageBooking" />
+      </div>
+      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" />
     </section>
 
     <!-- PRODUCTS -->
