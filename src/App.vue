@@ -85,6 +85,7 @@ export default {
     openMassageBooking(massage) {
       this.massageToBook = massage;
       this.massageMenu = 1;
+      this.fetchTherapists();
     },
 
     //login - logout -signin
@@ -336,7 +337,7 @@ export default {
         <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage"
           @book="openMassageBooking" />
       </div>
-      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" />
+      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" />
     </section>
 
     <!-- PRODUCTS -->
