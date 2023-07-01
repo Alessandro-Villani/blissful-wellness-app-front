@@ -337,7 +337,7 @@ export default {
         <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage"
           @book="openMassageBooking" />
       </div>
-      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" />
+      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" :user="user" />
     </section>
 
     <!-- PRODUCTS -->
