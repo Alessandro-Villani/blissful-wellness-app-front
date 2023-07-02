@@ -1,4 +1,8 @@
 <script>
+import axios from 'axios';
+
+const baseApiUrl = 'http://localhost:8080/api/v1/';
+
 export default {
     name: 'Booking Calendar',
     props: {
@@ -8,6 +12,7 @@ export default {
     },
     data() {
         return {
+            // DATE
             today: new Date().getDate(),
             month: new Date().getMonth(),
             currentMonth: new Date().getMonth(),
@@ -16,14 +21,18 @@ export default {
             currentHour: new Date().getHours(),
             weekDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
             monthsNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            // SELECT
             selectedDay: null,
             selectedMonth: null,
             selectedYear: null,
             settedHomeService: false,
+            // REDUCED BOOLEANS
             calendarReduced: false,
             therapistsReduced: false,
+            bookingFetchEnd: false,
             timeSelectionReduced: false,
             homeServiceReduced: false,
+            // DATAS
             selectedTherapist: null,
             startTime: null,
             endTime: null,
@@ -31,6 +40,9 @@ export default {
             endHour: null,
             homeService: false,
             address: '',
+            therapistBookings: null,
+            //SLOTS
+            usedSlots: [],
         }
     },
     computed: {
@@ -39,7 +51,7 @@ export default {
                 userId: this.user.id,
                 massageId: this.massage.id,
                 therapistId: this.selectedTherapist.id,
-                date: new Date(this.selectedYear, this.selectedMonth, this.selectedDay),
+                date: this.formattedSelectedDateForBooking,
                 startHour: this.startHour,
                 endHour: this.endHour,
                 totalHours: this.endTime - this.startTime,
@@ -81,6 +93,11 @@ export default {
             const month = this.selectedMonth + 1 < 10 ? '0' + (this.selectedMonth + 1) : this.selectedMonth + 1;
             return day + '/' + month + '/' + this.selectedYear;
         },
+        formattedSelectedDateForBooking() {
+            const day = this.selectedDay < 10 ? '0' + this.selectedDay : this.selectedDay;
+            const month = this.selectedMonth + 1 < 10 ? '0' + (this.selectedMonth + 1) : this.selectedMonth + 1;
+            return this.selectedYear + '-' + month + '-' + day;
+        },
         selectedTime() {
             if (this.startHour && this.endHour) return 'From ' + this.startHour + ':00 to ' + this.endHour + ':00';
             return null;
@@ -89,7 +106,7 @@ export default {
             if (this.homeService && this.address && this.settedHomeService) return 'Home service at: ' + this.address;
             if (!this.homeService && this.settedHomeService) return 'No home service';
             return 'Do you require home service?';
-        }
+        },
     },
     methods: {
         selectDay(day) {
@@ -116,6 +133,23 @@ export default {
                 this.calendarReduced = true;
             };
         },
+        fetchTherapistBookings() {
+            this.bookingFetchEnd = false;
+            this.usedSlots = [];
+            const day = this.selectedDay < 10 ? '0' + this.selectedDay : this.selectedDay;
+            const month = this.selectedMonth + 1 < 10 ? '0' + (this.selectedMonth + 1) : this.selectedMonth + 1;
+            const date = this.selectedYear + '-' + month + '-' + day;
+            axios.get(baseApiUrl + 'bookings/therapist/' + this.selectedTherapist.id, {
+                params: {
+                    date: date,
+                }
+            })
+                .then(res => {
+                    this.therapistBookings = res.data
+                    this.bookingFetchEnd = true;
+                })
+                .catch(e => console.log(e))
+        },
         selectTherapist(therapist) {
             this.timeSelectionReduced = false;
             this.startTime = null;
@@ -126,6 +160,7 @@ export default {
             this.homeService = false;
             this.homeServiceReduced = false;
             this.selectedTherapist = therapist;
+            this.fetchTherapistBookings();
             this.therapistsReduced = true;
         },
         goToMonth(direction) {
@@ -177,6 +212,32 @@ export default {
         hourClass(i) {
             const iEnd = i + 1;
             if (this.selectedDay === this.today && this.isCurrentMonthAndYear && i + 12 <= this.currentHour + 1) return "d-none"
+            const bookingsTimes = this.therapistBookings.map(booking => {
+                return {
+                    startSlot: booking.startHour > 12 ? booking.startHour - 12 : booking.startHour + 12,
+                    endSlot: booking.endHour > 12 ? booking.endHour - 13 : booking.endHour + 11,
+                }
+            })
+            bookingsTimes.forEach(booking => {
+                if (!this.usedSlots.includes(booking.startSlot)) this.usedSlots.push(booking.startSlot)
+                if (booking.endSlot - booking.startSlot > 1) {
+                    for (let i = 1; i < (booking.endSlot - booking.startSlot); i++) {
+                        const middleSlot = booking.startSlot + i;
+                        if (!this.usedSlots.includes(middleSlot)) this.usedSlots.push(middleSlot);
+                    }
+                }
+                if (!this.usedSlots.includes(booking.endSlot)) this.usedSlots.push(booking.endSlot)
+            })
+            if (this.usedSlots.includes(i)) return "disabled";
+            let filteredUsedSlotsLower = null;
+            let blockAbove = null;
+            let filteredUsedSlotsGreater = null;
+            let blockBelow = null;
+            if (this.startTime) filteredUsedSlotsLower = this.usedSlots.filter(slot => slot > this.startTime && slot < i);
+            if (filteredUsedSlotsLower && filteredUsedSlotsLower.length) blockAbove = Math.max(...filteredUsedSlotsLower);
+            if (this.startTime) filteredUsedSlotsGreater = this.usedSlots.filter(slot => slot < this.startTime && slot > i);
+            if (filteredUsedSlotsGreater && filteredUsedSlotsGreater.length) blockBelow = Math.min(...filteredUsedSlotsGreater);
+            if ((blockBelow && i < blockBelow) || (blockAbove && i > blockAbove)) return "blocked";
             if (i >= this.startTime && iEnd <= this.endTime) return "selected"
         },
         confirmTime() {
@@ -208,6 +269,12 @@ export default {
                 this.settedHomeService = true;
                 this.homeServiceReduced = true;
             }
+        },
+        //BOOKING
+        sendBooking() {
+            axios.post(baseApiUrl + 'bookings/store', this.booking)
+                .then(() => { })
+                .catch(e => console.log(e))
         }
     }
 }
@@ -264,18 +331,22 @@ export default {
         <i class="fa-solid fa-chevron-down" @click="therapistsReduced = false"></i>
     </div>
     <!-- HOUR SELECT -->
-    <div v-if="selectedDay && selectedTherapist">
+    <div v-if="selectedDay && selectedTherapist && bookingFetchEnd">
         <h4 class="text-center">{{ selectedTime ? selectedTime : 'Select Time' }}</h4>
         <div class="hours-section text-center" :class="timeSelectionReduced ? 'reduced' : ''">
             <div class="hours mb-3">
-                <div class="hour d-flex" v-for="i in 13" :key="i" @click="selectTime(i)" :class="hourClass(i)">
+                <div class="hour d-flex" v-for="i in 13" :key="i"
+                    @click="hourClass(i) != 'disabled' && hourClass(i) != 'blocked' ? selectTime(i) : console.log('disabled')"
+                    :class="hourClass(i)">
                     <div class="col-3 p-2 text-center">
                         <p class="mb-0">{{ i + 12 > 24 ? i + 12 - 24 : i + 12 }}:00</p>
                         <p class="mb-0">to</p>
                         <p class="mb-0">{{ (i + 1 + 12 > 24 ? i + 12 - 23 : i + 1 + 12) }}:00</p>
                     </div>
                     <div class="col-9 p-2 d-flex justify-content-center align-items-center">
-                        <h6 class="mb-0">AVAILABLE</h6>
+                        <h6 class="mb-0" :class="hourClass(i) === 'disabled' ? 'text-danger' : 'text-success'">{{
+                            hourClass(i) ===
+                            'disabled' ? 'NOT ' : '' }}AVAILABLE</h6>
                     </div>
                 </div>
             </div>
@@ -309,7 +380,7 @@ export default {
     <!-- CONFIRMATION -->
     <div class="text-center mt-5" v-if="selectedDay && selectedTherapist && selectedTime && settedHomeService">
         <h4 class="mb-3">Price: ₱{{ booking.price }}</h4>
-        <button class="btn btn-success">Confirm Booking</button>
+        <button class="btn btn-success" @click="sendBooking()">Confirm Booking</button>
     </div>
 </template>
 
@@ -362,6 +433,10 @@ export default {
     &.past {
         background-color: gray;
 
+    }
+
+    &.disabled {
+        background-color: gray;
     }
 
 }
@@ -453,7 +528,8 @@ export default {
             color: white;
         }
 
-        &.disabled {
+        &.disabled,
+        &.blocked {
             background-color: gray;
         }
 
