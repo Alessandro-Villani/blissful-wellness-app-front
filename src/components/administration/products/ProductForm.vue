@@ -9,12 +9,18 @@ export default {
                 product: {
                     name: this.formType === 2 ? this.existingProduct.name : '',
                     description: this.formType === 2 ? this.existingProduct.description : '',
-                    imageUrl: this.formType === 2 ? this.existingProduct.imageUrl : '',
                     price: this.formType === 2 ? this.existingProduct.price : null,
                     stockQuantity: this.formType === 2 ? this.existingProduct.stockQuantity : null,
-                }
+                },
+                imageUrl: null,
             }
         }
+    },
+    methods: {
+        handleFileChange(event) {
+            const file = event.target.files[0];
+            this.product.imageUrl = file;
+        },
     },
     props: {
         formType: Number,
@@ -35,7 +41,7 @@ export default {
             <label for="name">Name</label>
             <input class="mb-3" type="text" name="name" id="name" v-model="product.product.name">
             <label for="imageUrl">Image Url</label>
-            <input class="mb-3" type="text" name="imageUrl" id="imageUrl" v-model="product.product.imageUrl">
+            <input class="mb-3" type="file" name="imageUrl" id="imageUrl" @change="handleFileChange">
             <label for="price">Price</label>
             <input class="mb-3" type="number" min="0" name="price" id="price" v-model="product.product.price">
             <label for="stockQuantity">Quantity in Stock</label>

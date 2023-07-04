@@ -21,6 +21,9 @@ export default {
     methods: {
         deliveryChange() {
             this.purchaseOrder.delivery ? this.purchaseOrder.dateOfPickup = null : this.purchaseOrder.address = '';
+        },
+        imageUrl(product) {
+            return 'http://localhost:8080/' + product.imageUrl;
         }
     }
 }
@@ -30,7 +33,7 @@ export default {
     <div class="overlay container d-flex align-items-center justify-content-center">
         <form @submit.prevent="$emit('emit-order', purchaseOrder)" class="card flex-row flex-wrap align-items-center p-5">
             <div class="col-6 mb-5">
-                <img class="img-fluid" :src="product.imageUrl" :alt="product.name">
+                <img class="img-fluid" :src="imageUrl(product)" :alt="product.name">
             </div>
             <div class="col-6 text-center mb-5">
                 <h5>{{ product.name }}</h5>

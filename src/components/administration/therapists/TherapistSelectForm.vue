@@ -40,6 +40,9 @@ export default {
         openForm(user) {
             this.selectedUser = user;
             this.formState = 1;
+        },
+        imageUrl(user) {
+            return 'http://localhost:8080/' + user.profilePic;
         }
     },
     mounted() {
@@ -60,7 +63,7 @@ export default {
         <div class="row">
             <div class="col-12 card py-2 flex-row mb-1 justify-content-center" v-for="user in users" :key="user.id"
                 @click="openForm(user)">
-                <div class="col-2 d-flex align-items-center justify-content-center"><img :src="user.profilePic"
+                <div class="col-2 d-flex align-items-center justify-content-center"><img :src="imageUrl(user)"
                         :alt="user.username" class="user-pic rounded-circle img-fluid border"></div>
                 <div class="col-4 d-flex align-items-center justify-content-center">{{ user.username }}</div>
                 <div class="col-6 d-flex align-items-center justify-content-center">{{ user.firstName }} {{ user.lastName }}

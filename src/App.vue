@@ -22,6 +22,7 @@ import OrderForm from './components/orders/OrderForm.vue';
 import OrderCard from './components/orders/OrderCard.vue';
 import SwitchBar from './components/generics/SwitchBar.vue';
 import BookingCalendar from './components/bookings/BookingCalendar.vue';
+import BookingCard from './components/bookings/BookingCard.vue';
 
 import SignInForm from './components/auth/SignInForm.vue';
 export default {
@@ -46,7 +47,8 @@ export default {
       massages: [],
       products: [],
       user: {},
-      orders: {},
+      orders: [],
+      bookings: [],
       massageToEdit: {},
       massageToBook: {},
       selectedTherapist: {},
@@ -56,7 +58,7 @@ export default {
       ordersFilter: 'All',
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard },
   methods: {
     //menus
     setMenu(i) {
@@ -75,6 +77,7 @@ export default {
       }
       if (i === 6 && this.isAdmin) this.fetchOrders();
       if (i === 6 && !this.isAdmin) this.fetchUser();
+      if (i === 7) this.fetchBookings();
     },
     setAdministration(i) {
       this.administration.index = i;
@@ -93,7 +96,21 @@ export default {
       console.log(user);
       axios.post(baseApiUrl + 'login', user)
         .then(res => {
-          this.user = res.data;
+          this.therapists = [],
+            this.massages = [],
+            this.products = [],
+            this.orders = [],
+            this.bookings = [],
+            this.menu = 1,
+            this.massageMenu = 0,
+            this.administration = {
+              index: 0,
+              therapists: 0,
+              massage: 0,
+              products: 0
+            },
+            this.ordersFilter = 'All',
+            this.user = res.data;
           this.isLogged = true;
         })
         .catch(e => console.log(e))
@@ -104,7 +121,15 @@ export default {
       this.menu = 1;
     },
     signIn(user) {
-      axios.post(baseApiUrl + 'signin', user)
+      console.log(user);
+      const formData = new FormData()
+      formData.append('user', JSON.stringify(user.user));
+      formData.append('file', user.file);
+      axios.post(baseApiUrl + 'signin', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
         .then(() => {
           this.signInForm = false;
           console.log('signin-success');
@@ -137,6 +162,15 @@ export default {
       axios.get(baseApiUrl + 'purchaseorders')
         .then(res => this.orders = res.data)
         .catch(e => console.log(e))
+    },
+    fetchBookings() {
+      console.log(!this.userRoles.length);
+      if (!this.userRoles.length) {
+        axios.get(baseApiUrl + 'bookings/user/' + this.user.id)
+          .then(res => this.bookings = res.data)
+          .catch(e => console.log(e))
+
+      }
     },
     //edit annd update therapist
     editTherapist(therapist) {
@@ -183,15 +217,28 @@ export default {
 
     // add or edit product
     product(product) {
+      console.log(product);
       if (!product.isEdit) {
-        axios.post(baseApiUrl + 'products/store', product.product)
+        const formData = new FormData();
+        formData.append('file', product.imageUrl)
+        formData.append('product', JSON.stringify(product.product))
+        axios.post(baseApiUrl + 'products/store', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
           .then(() => {
             this.administration.products = 0;
             this.fetchProducts;
           })
           .catch(e => console.log(e))
       } else {
-        axios.put(baseApiUrl + 'products/update/' + product.id, product.product)
+        const formData = new FormData();
+        formData.append('product', JSON.stringify(product.product))
+        if (product.imageUrl) {
+          formData.append('file', product.imageUrl)
+        }
+        axios.put(baseApiUrl + 'products/update/' + product.id, formData)
           .then(() => {
             this.administration.products = 0;
             this.fetchProducts();
@@ -231,6 +278,10 @@ export default {
       if (role === 'user') this.fetchUser();
       if (role === 'admin') this.fetchOrders();
     },
+    // bookings
+    sentBooking() {
+      this.setMenu(7);
+    }
   },
   computed: {
     //ROLES AND MENU
@@ -241,6 +292,9 @@ export default {
     },
     isAdmin() {
       return this.userRoles.includes("admin");
+    },
+    isTherapist() {
+      return this.userRoles.includes("therapist");
     },
     mainClasses() {
       let classes = '';
@@ -337,7 +391,8 @@ export default {
         <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage"
           @book="openMassageBooking" />
       </div>
-      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" :user="user" />
+      <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" :user="user"
+        @booking-sent="sentBooking()" />
     </section>
 
     <!-- PRODUCTS -->
@@ -396,6 +451,12 @@ export default {
         <OrderCard v-for="order in filteredOrders" :purchaseOrder="order" :forAdmin="isAdmin"
           @order-handled="refreshOrdersHandledBy" />
       </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section v-if="menu === 7" class="bookings pt-5">
+      <h2 class="text-center mb-5" v-if="!bookings.length">NO BOOKINGS</h2>
+      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" />
     </section>
   </main>
 

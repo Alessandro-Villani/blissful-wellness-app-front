@@ -4,7 +4,12 @@ export default {
     props: {
         product: Object,
     },
-    emits: ['order-form']
+    emits: ['order-form'],
+    methods: {
+        imageUrl(product) {
+            return 'http://localhost:8080/' + product.imageUrl;
+        }
+    }
 }
 </script>
 
@@ -12,7 +17,7 @@ export default {
     <div class="product-card row mb-5 position-relative">
         <div class="col-4 d-flex flex-column justify-content-between align-items-center text-center">
             <h4>{{ product.name.toUpperCase() }}</h4>
-            <img class="product-pic" :src="product.imageUrl" :alt="product.name">
+            <img class="product-pic" :src="imageUrl(product)" :alt="product.name">
         </div>
         <div class="col-8 col-4 d-flex flex-column justify-content-between">
             <p class="description">{{ product.description }}</p>

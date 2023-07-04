@@ -38,6 +38,9 @@ export default {
             axios.patch(baseApiUrl + 'purchaseorders/' + this.purchaseOrder.id + '/' + action)
                 .then(() => this.$emit('order-handled', this.forAdmin ? 'admin' : 'user'))
                 .catch(e => console.log(e))
+        },
+        imageUrl(product) {
+            return 'http://localhost:8080/' + product.imageUrl;
         }
     }
 }
@@ -47,7 +50,7 @@ export default {
     <div class="col-12">
         <div class="order-card rounded-3 d-flex py-3 mb-3">
             <div class="col-4 d-flex align-items-center">
-                <img class="product-pic" :src="purchaseOrder.product.imageUrl" :alt="purchaseOrder.product.name">
+                <img class="product-pic" :src="imageUrl(purchaseOrder.product)" :alt="purchaseOrder.product.name">
             </div>
             <div class="col-8 flex-wrap d-flex justify-content-between align-items-center">
                 <div class="col-12 text-center mb-3">

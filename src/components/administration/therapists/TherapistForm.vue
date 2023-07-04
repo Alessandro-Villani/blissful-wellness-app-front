@@ -13,7 +13,7 @@ export default {
     },
     computed: {
         profilePicUrl() {
-            return this.formState === 2 ? this.user.user.profilePic : this.user.profilePic;
+            return this.formState === 2 ? this.imageUrl(this.user.user) : this.imageUrl(this.user);
         },
         firstName() {
             return this.formState === 2 ? this.user.user.firstName : this.user.firstName;
@@ -43,6 +43,9 @@ export default {
                     this.therapist.massages.push(id);
                 }
             })
+        },
+        imageUrl(user) {
+            return 'http://localhost:8080/' + user.profilePic;
         }
     }
 }

@@ -9,14 +9,22 @@ export default {
                 firstName: '',
                 lastName: '',
                 dateOfBirth: '',
-                profilePic: ''
-            }
+            },
+            profilePic: null,
         }
     },
     methods: {
+        handleFileChange(event) {
+            const file = event.target.files[0];
+            this.profilePic = file;
+        },
         signIn() {
-            if (this.user.username && this.user.password && this.user.firstName && this.user.lastName && this.user.dateOfBirth && this.user.profilePic) {
-                this.$emit('signin', this.user);
+            if (this.user.username && this.user.password && this.user.firstName && this.user.lastName && this.user.dateOfBirth) {
+                const sentUser = {
+                    user: this.user,
+                    file: this.profilePic
+                }
+                this.$emit('signin', sentUser);
             }
         }
     },
@@ -51,7 +59,7 @@ export default {
                 </div>
                 <div class="col-12 d-flex flex-column mb-5">
                     <label for="profilePic">Profile picture</label>
-                    <input type="text" name="profilePic" id="profilePic" v-model="user.profilePic">
+                    <input type="file" name="profilePic" id="profilePic" @change="handleFileChange">
                 </div>
                 <div class="col-12 text-center">
                     <button class="btn btn-success">Confirm</button>

@@ -45,6 +45,9 @@ export default {
 
                 })
                 .catch(e => console.log(e))
+        },
+        imageUrl(user) {
+            return 'http://localhost:8080/' + user.profilePic;
         }
     }
 }
@@ -64,7 +67,7 @@ export default {
             <div class="col-12 d-flex flex-column justify-content-between align-items-center">
                 <h4 class="mb-3">{{ therapist.therapistName }}</h4>
             </div>
-            <img class="employee-pic border rounded-circle img-fluid mb-3" :src="therapist.user.profilePic"
+            <img class="employee-pic border rounded-circle img-fluid mb-3" :src="imageUrl(therapist.user)"
                 :alt="therapist.user.username">
             <div class="col-12 d-flex flex-column justify-content-between align-items-center">
                 <p class="vote mb-1">Rating: <i v-for="i in 5" :key="i" class="fa-star"

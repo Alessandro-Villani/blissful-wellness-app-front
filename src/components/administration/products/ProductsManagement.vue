@@ -32,6 +32,9 @@ export default {
             axios.patch(baseApiUrl + "products/" + product.id + "/quantity", product)
                 .then(() => this.fetchProducts())
                 .catch(e => console.log(e))
+        },
+        imageUrl(product) {
+            return 'http://localhost:8080/' + product.imageUrl;
         }
     },
     emits: ["back", "add-product", "edit-product"],
@@ -57,7 +60,7 @@ export default {
     <div v-for="product in products" :key="product.id" class="row mb-1">
         <div class="card py-3 d-flex flex-row align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <img :src="product.imageUrl" :alt="product.name" class="product-pic img-fluid col-4">
+                <img :src="imageUrl(product)" :alt="product.name" class="product-pic img-fluid col-4">
                 <p class="mb-0 col-6">{{ product.name }}</p>
                 <ProductQuantityPatchForm :patchProduct="product" @patch-quantity="patchProductQuantity" />
             </div>

@@ -23,6 +23,9 @@ export default {
                     this.fetchTherapists();
                 })
                 .catch(e => console.log(e))
+        },
+        imageUrl(user) {
+            return 'http://localhost:8080/' + user.profilePic;
         }
     },
     mounted() {
@@ -44,7 +47,7 @@ export default {
     <div v-for="therapist in therapists" :key="therapist.id" class="row mb-1">
         <div class="card py-3 d-flex flex-row align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <img :src="therapist.user.profilePic" :alt="therapist.therapistName"
+                <img :src="imageUrl(therapist.user)" :alt="therapist.therapistName"
                     class="therapist-pic rounded-circle img-fluid me-3">
                 <p class="mb-0">{{ therapist.therapistName }}</p>
             </div>

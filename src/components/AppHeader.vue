@@ -26,7 +26,8 @@ export default {
             <nav class="container d-flex justify-content-center align-items-center">
                 <nav class="col-4 p-2">
                     <div v-if="isLogged && user" class="user d-flex flex-row align-items-center">
-                        <img class="user-img img-fluid rounded-circle me-2" :src="user.profilePic" :alt="user.username">
+                        <img class="user-img img-fluid rounded-circle me-2"
+                            :src="'http://localhost:8080/' + user.profilePic" :alt="user.username">
                         <p class="mb-0">{{ user.username }}</p>
                     </div>
                 </nav>

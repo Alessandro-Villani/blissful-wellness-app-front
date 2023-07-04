@@ -10,6 +10,7 @@ export default {
         therapists: Array,
         user: Object,
     },
+    emits: ['booking-sent'],
     data() {
         return {
             // DATE
@@ -109,6 +110,9 @@ export default {
         },
     },
     methods: {
+        imageUrl(user) {
+            return 'http://localhost:8080/' + user.profilePic;
+        },
         selectDay(day) {
             if (!(day < this.today && this.isCurrentMonthAndYear) && !(this.year < this.currentYear)) {
                 this.selectedTherapist = null;
@@ -273,7 +277,9 @@ export default {
         //BOOKING
         sendBooking() {
             axios.post(baseApiUrl + 'bookings/store', this.booking)
-                .then(() => { })
+                .then(() => {
+                    this.$emit('booking-sent')
+                })
                 .catch(e => console.log(e))
         }
     }
@@ -313,7 +319,7 @@ export default {
         <h4 class="text-center" v-if="!selectedTherapist">Select Therapist</h4>
         <div class="selected-therapist d-flex align-items-center justify-content-center"
             :class="therapistsReduced ? '' : 'open'" v-else>
-            <img class="selected-therapist-pic me-3" :src="selectedTherapist.user.profilePic"
+            <img class="selected-therapist-pic me-3" :src="imageUrl(selectedTherapist.user)"
                 :alt="selectedTherapist.therapistName">
             <p class="text-center mb-0"><b>{{ selectedTherapist.therapistName }}</b></p>
         </div>
@@ -321,7 +327,7 @@ export default {
             <div class="col-3" v-for="therapist in ableTherapists">
                 <div class="therapist" @click="selectTherapist(therapist)"
                     :class="therapist === selectedTherapist ? 'selected' : ''">
-                    <img class="therapist-pic mb-1" :src="therapist.user.profilePic" :alt="therapist.therapistName">
+                    <img class="therapist-pic mb-1" :src="imageUrl(therapist.user)" :alt="therapist.therapistName">
                     <p class="text-center mb-0">{{ therapist.therapistName }}</p>
                 </div>
             </div>
