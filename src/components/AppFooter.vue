@@ -3,7 +3,7 @@ export default {
     name: 'App Footer',
     props: {
         isLogged: Boolean,
-        roles: Array,
+        userRole: String,
         menuState: Number,
     },
     methods: {
@@ -50,14 +50,15 @@ export default {
                 <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(7)"
                     :class="menuState === 7 ? 'selected' : ''">
                     <i class="fa-solid fa-calendar mb-1"></i>
-                    <small>Bookings</small>
+                    <small>{{ userRole === 'therapist' ? 'Appointments' : 'Bookings' }}</small>
                 </div>
-                <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(6)"
+                <div v-if="userRole != 'therapist'"
+                    class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(6)"
                     :class="menuState === 6 ? 'selected' : ''">
                     <i class="fa-solid fa-cart-shopping mb-1"></i>
                     <small>Orders</small>
                 </div>
-                <div v-if="isLogged && roles.includes('admin')" @click="menuClick(5)"
+                <div v-if="isLogged && userRole === 'admin'" @click="menuClick(5)"
                     class="col-2 d-flex flex-column align-items-center justify-content-center"
                     :class="menuState === 5 ? 'selected' : ''">
                     <i class="fa-solid fa-screwdriver-wrench"></i>

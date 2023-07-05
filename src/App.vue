@@ -93,7 +93,6 @@ export default {
 
     //login - logout -signin
     logIn(user) {
-      console.log(user);
       axios.post(baseApiUrl + 'login', user)
         .then(res => {
           this.therapists = [],
@@ -121,7 +120,6 @@ export default {
       this.menu = 1;
     },
     signIn(user) {
-      console.log(user);
       const formData = new FormData()
       formData.append('user', JSON.stringify(user.user));
       formData.append('file', user.file);
@@ -167,6 +165,23 @@ export default {
       console.log(!this.userRoles.length);
       if (!this.userRoles.length) {
         axios.get(baseApiUrl + 'bookings/user/' + this.user.id)
+          .then(res => this.bookings = res.data)
+          .catch(e => console.log(e))
+
+      }
+      if (this.isTherapist) {
+        axios.get(baseApiUrl + 'therapists/user/' + this.user.id)
+          .then(res => {
+            const therapist = res.data
+            axios.get(baseApiUrl + 'bookings/therapist/' + therapist.id)
+              .then(res => this.bookings = res.data)
+              .catch(e => console.log(e))
+          })
+          .catch(e => console.log(e))
+
+      }
+      if (this.isAdmin) {
+        axios.get(baseApiUrl + 'bookings')
           .then(res => this.bookings = res.data)
           .catch(e => console.log(e))
 
@@ -291,10 +306,17 @@ export default {
       } else return null;
     },
     isAdmin() {
-      return this.userRoles.includes("admin");
+      if (this.userRoles) return this.userRoles.includes("admin");
+      return null
     },
     isTherapist() {
-      return this.userRoles.includes("therapist");
+      if (this.userRoles) return this.userRoles.includes("therapist");
+      return null
+    },
+    userRole() {
+      if (this.userRoles && !this.userRoles.length) return "user";
+      if (this.isAdmin) return "admin";
+      if (this.isTherapist) return "therapist";
     },
     mainClasses() {
       let classes = '';
@@ -456,12 +478,12 @@ export default {
     <!-- BOOKINGS -->
     <section v-if="menu === 7" class="bookings pt-5">
       <h2 class="text-center mb-5" v-if="!bookings.length">NO BOOKINGS</h2>
-      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" />
+      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" :userRole="userRole" />
     </section>
   </main>
 
   <!-- FOOTER -->
-  <AppFooter :isLogged="isLogged" :roles="userRoles" :menuState="menu" @menu="setMenu" />
+  <AppFooter :isLogged="isLogged" :userRole="userRole" :menuState="menu" @menu="setMenu" />
 
   <!-- FORMS -->
   <LogInForm v-if="logInForm" @login="logIn" @login-close="logInForm = false" />
