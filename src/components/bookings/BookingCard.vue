@@ -13,13 +13,23 @@ export default {
                 rejectionReason: '',
             },
             rejectionMessageOpen: false,
+            review: {
+                grade: 1,
+                review: '',
+                therapist: this.booking.therapist.id,
+                author: this.booking.user.id,
+                massageName: this.booking.massage.name,
+                duration: this.booking.totalHours,
+                date: null
+            },
+            showDetails: false,
         }
     },
     props: {
         booking: Object,
         userRole: String,
     },
-    emits: ['booking-accepted'],
+    emits: ['booking-handled', 'review-store'],
     computed: {
         bookingDate() {
             const date = new Date(this.booking.date);
@@ -41,24 +51,40 @@ export default {
         imageUrl(user) {
             return 'http://localhost:8080/' + user.profilePic;
         },
+        toggleDetails() {
+            this.showDetails = !this.showDetails;
+        },
         acceptBooking() {
             axios.patch(baseApiUrl + 'bookings/' + this.booking.id + '/accept')
-                .then(() => this.$emit('booking-accepted'))
+                .then(() => this.$emit('booking-handled'))
                 .catch(e => console.log(e));
         },
         completeBooking() {
             axios.patch(baseApiUrl + 'bookings/' + this.booking.id + '/complete')
-                .then(() => this.$emit('booking-accepted'))
+                .then(() => this.$emit('booking-handled'))
                 .catch(e => console.log(e));
         },
         rejectBooking() {
             axios.patch(baseApiUrl + 'bookings/' + this.booking.id + '/reject', this.rejectionReason)
                 .then(() => {
-                    this.$emit('booking-accepted')
+                    this.$emit('booking-handled')
                     this.rejectionMessageOpen = false;
                 })
                 .catch(e => console.log(e));
-        }
+        },
+        sendReview() {
+            axios.post(baseApiUrl + 'reviews/store', this.review)
+                .then(() => {
+                    axios.patch(baseApiUrl + 'bookings/' + this.booking.id + '/reviewed')
+                        .then(() => {
+                            console.log('reviewed');
+                            this.$emit('review-store');
+                        })
+                        .catch(e => console.log(e))
+
+                })
+                .catch(e => console.log(e))
+        },
     },
     mounted() {
         if (this.booking.homeService) {
@@ -73,6 +99,7 @@ export default {
                 color: '#3E0E32'
             }).setLngLat([this.booking.longitude, this.booking.latitude]).addTo(map);
         }
+        this.review.date = this.bookingDate;
     }
 }
 </script>
@@ -83,23 +110,40 @@ export default {
         <p class="mb-1">{{ bookingDate }}</p>
         <small class="mb-3">{{ booking.startHour }}:00 - {{ booking.endHour }}:00 ({{ booking.totalHours }}
             hrs)</small>
-        <div class="text-center" v-if="userRole === 'user' || userRole === 'admin'">
-            <p class="mb-1">Therapist</p>
-            <img :src="imageUrl(booking.therapist.user)" :alt="booking.therapist.therapistName" class="therapist-pic mb-1">
-            <p>{{ booking.therapist.therapistName }}</p>
+        <div class="details" :class="showDetails ? '' : 'reduced'">
+            <div class="text-center" v-if="userRole === 'user' || userRole === 'admin'">
+                <p class="mb-1">Therapist</p>
+                <img :src="imageUrl(booking.therapist.user)" :alt="booking.therapist.therapistName"
+                    class="therapist-pic mb-1">
+                <p>{{ booking.therapist.therapistName }}</p>
+            </div>
+            <div class="text-center" v-if="userRole === 'therapist' || userRole === 'admin'">
+                <p class="mb-1">Customer</p>
+                <img :src="imageUrl(booking.user)" :alt="booking.user.username" class="therapist-pic mb-1">
+                <p>{{ booking.user.username }}</p>
+            </div>
+            <div v-if="booking.homeService" class="map-container d-flex justify-content-center mb-3">
+                <div :id="'map' + this.booking.id" class="map"></div>
+            </div>
+            <p class="mb-3">{{ booking.homeService ? booking.address : 'In Spa' }}</p>
         </div>
-        <div class="text-center" v-if="userRole === 'therapist' || userRole === 'admin'">
-            <p class="mb-1">Customer</p>
-            <img :src="imageUrl(booking.user)" :alt="booking.user.username" class="therapist-pic mb-1">
-            <p>{{ booking.user.username }}</p>
+        <div class="d-flex align-items-center justify-content-center mb-3" @click="toggleDetails">
+            <p class="mb-0 me-2" v-if="!showDetails">Show details</p><i class="fa-solid fa-chevron-down"
+                :class="showDetails ? 'rotated' : ''"></i>
         </div>
-        <div v-if="booking.homeService" class="map-container d-flex justify-content-center mb-3">
-            <div :id="'map' + this.booking.id" class="map"></div>
-        </div>
-        <p class="mb-4">{{ booking.homeService ? booking.address : 'In Spa' }}</p>
-        <h4 class="mb-3">Price: ₱{{ booking.price }}</h4>
+        <h4 :class="userRole === 'user' || status === 'pending' || status === 'accepted' ? 'mb-3' : 'mb-0'">Price: ₱{{
+            booking.price }}</h4>
         <p class="mb-0" v-if="userRole === 'user'">Status: <span class="status-text">{{ status }}</span></p>
         <p class="mt-3" v-if="userRole === 'user' && status === 'rejected'">Reason: {{ booking.rejectionReason }}</p>
+        <div class="text-center d-flex flex-column align-items-center mt-5"
+            v-if="userRole === 'user' && status === 'completed' && !booking.reviewed">
+            <h6 class="mb-3">Rate your experience</h6>
+            <p class="mb-3">Rating: <i v-for="  i   in   5  " :key="i" class="fa-star"
+                    :class="i <= review.grade ? 'fa-solid' : 'fa-regular'" @click="review.grade = i"></i></p>
+            <textarea class="mb-3" name="review" id="review" rows="10" placeholder="Leave a feedback..."
+                v-model="review.review"></textarea>
+            <button class="btn btn-primary" @click="sendReview">Review</button>
+        </div>
         <div v-if="userRole != 'user'" class="buttons">
             <div class="accept" v-if="status === 'pending'">
                 <h6>Accept Booking?</h6>
@@ -140,6 +184,25 @@ export default {
 
     &.completed {
         background-color: lightgray;
+    }
+}
+
+.details {
+    max-height: 1000px;
+    overflow-y: hidden;
+    transition: all 1s;
+
+    &.reduced {
+        max-height: 0;
+    }
+
+}
+
+.fa-chevron-down {
+    transition: all 0.5s;
+
+    &.rotated {
+        transform: rotate(180deg);
     }
 }
 

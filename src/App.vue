@@ -56,6 +56,7 @@ export default {
       productToPurchase: {},
       //FILTERS
       ordersFilter: 'All',
+      bookingsFilter: 'All',
     }
   },
   components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard },
@@ -162,7 +163,6 @@ export default {
         .catch(e => console.log(e))
     },
     fetchBookings() {
-      console.log(!this.userRoles.length);
       if (!this.userRoles.length) {
         axios.get(baseApiUrl + 'bookings/user/' + this.user.id)
           .then(res => this.bookings = res.data)
@@ -286,9 +286,6 @@ export default {
         })
         .catch(e => console.log(e))
     },
-    setOrdersFilter(filter) {
-      this.ordersFilter = filter;
-    },
     refreshOrdersHandledBy(role) {
       if (role === 'user') this.fetchUser();
       if (role === 'admin') this.fetchOrders();
@@ -296,7 +293,14 @@ export default {
     // bookings
     sentBooking() {
       this.setMenu(7);
-    }
+    },
+    //FILTERS
+    setOrdersFilter(filter) {
+      this.ordersFilter = filter;
+    },
+    setBookingsFilter(filter) {
+      this.bookingsFilter = filter;
+    },
   },
   computed: {
     //ROLES AND MENU
@@ -373,7 +377,27 @@ export default {
             return orders;
         }
       } else return null
-    }
+    },
+    filteredBookings() {
+      this.fetchBookings()
+      let bookings = this.bookings;
+      switch (this.bookingsFilter) {
+        case 'Pending':
+          bookings = bookings.filter(booking => !booking.accepted && !booking.rejected);
+          return bookings;
+        case 'Accepted':
+          bookings = bookings.filter(booking => booking.accepted && !booking.completed);
+          return bookings;
+        case 'Declined':
+          bookings = bookings.filter(booking => booking.rejected);
+          return bookings;
+        case 'Completed':
+          bookings = bookings.filter(booking => booking.completed);
+          return bookings;
+        default:
+          return bookings;
+      }
+    },
 
   }
 }
@@ -403,7 +427,7 @@ export default {
     <section v-if="menu === 2" class="therapists pt-5">
       <h1 class="text-center mb-5">OUR THERAPISTS</h1>
       <EmployeesCard v-for="(therapist, i) in therapists" :key="therapist.id" :index="i" :therapist="therapist"
-        :userId="isLogged ? user.id : null" :isLogged="isLogged" @review-store="fetchTherapists" />
+        :userId="isLogged ? user.id : null" :isLogged="isLogged" />
     </section>
 
     <!-- MASSAGES -->
@@ -476,10 +500,13 @@ export default {
     </section>
 
     <!-- BOOKINGS -->
-    <section v-if="menu === 7" class="bookings pt-5">
-      <h2 class="text-center mb-5" v-if="!bookings.length">NO BOOKINGS</h2>
-      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" :userRole="userRole"
-        @booking-accepted="fetchBookings()" />
+    <section v-if="menu === 7" class="bookings d-flex flex-column pt-5 ">
+      <h2 class="text-center mb-5" v-if="!bookings.length">No Bookings</h2>
+      <SwitchBar class="align-self-center" v-if="bookings.length"
+        :menus="['All', 'Pending', 'Accepted', 'Declined', 'Completed']" :selectedMenu="bookingsFilter"
+        @switch="setBookingsFilter" />
+      <BookingCard v-for="booking in filteredBookings" :booking="booking" :key="booking.id" :userRole="userRole"
+        @booking-handled="fetchBookings()" @review-store="fetchBookings" />
     </section>
   </main>
 

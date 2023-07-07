@@ -8,13 +8,6 @@ export default {
     data() {
         return {
             reviewsShow: false,
-            addReviewShow: false,
-            review: {
-                grade: 1,
-                review: '',
-                therapist: this.therapist.id,
-                author: this.userId,
-            }
         }
     },
     props: {
@@ -28,23 +21,6 @@ export default {
         toggleReviews() {
             this.addReviewShow = false;
             this.reviewsShow = !this.reviewsShow;
-        },
-        postReview() {
-            axios.post(baseApiUrl + 'reviews/store', this.review)
-                .then(() => {
-                    this.$emit('review-store');
-                    this.addReviewShow = false;
-                    const container = this.$refs.reviewContent;
-                    console.log(container);
-                    setTimeout(() => {
-                        container.scrollTo({
-                            top: container.scrollHeight,
-                            behavior: 'smooth'
-                        });
-                    }, 300);
-
-                })
-                .catch(e => console.log(e))
         },
         imageUrl(user) {
             return 'http://localhost:8080/' + user.profilePic;
@@ -74,7 +50,7 @@ export default {
                         :class="i <= therapist.reviewAverage ? 'fa-solid' : 'fa-regular'"></i></p>
                 <p class="vote mb-0">({{ therapist.reviews.length ??
                     '0'
-                }} Reviews)</p>
+                }} Review{{ therapist.reviews.length === 1 ? ')' : 's)' }}</p>
             </div>
         </div>
         <div class="col-7 mb-2">
@@ -95,12 +71,14 @@ export default {
             <button class="btn-reviews mb-3" @click="toggleReviews"><i class="fa-solid fa-chevron-down"
                     :class="reviewsShow ? 'rotated' : ''"></i> Show
                 reviews</button>
-            <div v-if="reviewsShow" class="reviews-conteiner">
+            <div v-if="reviewsShow" class="reviews-container">
                 <div class="reviews-content border rounded-2 p-2 mb-3" ref="reviewContent">
-                    <div v-if="therapist.reviews.length" class="row border-bottom mb-3"
-                        v-for="  review   in   therapist.reviews  ">
-                        <div class="col-12 text-center">
-                            <p class="mb-1">{{ review.author.username }}</p>
+                    <div v-if="therapist.reviews.length" class="row" v-for="  review   in   therapist.reviews  "
+                        :class="therapist.reviews.length > 1 ? 'border-bottom mb-3' : ''">
+                        <div class="col-12 text-center mb-2">
+                            <p class="mb-0"><b>{{ review.author.username }}</b></p>
+                            <small>{{ review.massageName }} massage on {{ review.massageDate }} ({{ review.massageDuration
+                            }} hr</small><small>{{ review.massageDuration > 1 ? 's)' : ')' }}</small>
                         </div>
                         <div class="col-12 text-center">
                             <p class="mb-3"><i v-for="  i   in   5  " :key="i" class="fa-star"
@@ -111,20 +89,6 @@ export default {
                         </div>
                     </div>
                     <div class="p-2 text-center" v-else>No reviews yet</div>
-                </div>
-                <div class="d-flex flex-column text-center">
-                    <button v-if="!addReviewShow" class="btn btn-primary align-self-center" :disabled="!isLogged"
-                        @click="addReviewShow = true">Add Review</button>
-
-                    <!-- REVIEW FORM -->
-                    <form @submit.prevent="postReview" v-if="addReviewShow" class="review-creation d-flex flex-column">
-                        <h4 class="mb-3">Insert your review</h4>
-                        <p class="mb-3">Rating: <i v-for="  i   in   5  " :key="i" class="fa-star"
-                                :class="i <= review.grade ? 'fa-solid' : 'fa-regular'" @click="review.grade = i"></i></p>
-                        <label for="review">Review</label>
-                        <textarea class="mb-2" name="review" id="review" v-model="review.review"></textarea>
-                        <button class="btn btn-success align-self-center">Send</button>
-                    </form>
                 </div>
             </div>
         </div>
