@@ -79,6 +79,7 @@ footer {
     background-color: rgb(62, 14, 50);
     box-shadow: 0 0 30px black;
     color: white;
+    z-index: 10000;
 
     address {
         font-size: 10px;

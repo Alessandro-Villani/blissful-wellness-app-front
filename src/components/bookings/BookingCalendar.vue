@@ -33,6 +33,7 @@ export default {
             bookingFetchEnd: false,
             timeSelectionReduced: false,
             homeServiceReduced: false,
+            openSuggestions: false,
             // DATAS
             selectedTherapist: null,
             startTime: null,
@@ -41,6 +42,9 @@ export default {
             endHour: null,
             homeService: false,
             address: '',
+            latitude: null,
+            longitude: null,
+            searchedAddresses: [],
             therapistBookings: null,
             //SLOTS
             usedSlots: [],
@@ -58,6 +62,8 @@ export default {
                 totalHours: this.endTime - this.startTime,
                 homeService: this.homeService,
                 address: this.homeService ? this.address : null,
+                latitude: this.homeService ? this.latitude : null,
+                longitude: this.homeService ? this.longitude : null,
                 price: (this.endTime - this.startTime) * this.massage.pricePerHour,
             }
         },
@@ -274,6 +280,19 @@ export default {
                 this.homeServiceReduced = true;
             }
         },
+        searchAddress() {
+            this.openSuggestions = true;
+            axios.get("https://api.tomtom.com/search/2/search/" + this.address + ".json?key=lCdijgMp1lmgVifAWwN8K9Jrfa9XcFzm")
+                .then(res => this.searchedAddresses = res.data.results)
+                .catch(e => console.log(e))
+
+        },
+        selectSuggestion(address) {
+            this.address = address.address.freeformAddress;
+            this.latitude = address.position.lat;
+            this.longitude = address.position.lon;
+            this.openSuggestions = false;
+        },
         //BOOKING
         sendBooking() {
             axios.post(baseApiUrl + 'bookings/store', this.booking)
@@ -372,7 +391,14 @@ export default {
             </div>
             <div v-else class="d-flex flex-column align-items-center">
                 <label for="address">Insert your address</label>
-                <input class="mb-3" type="text" name="address" id="address" v-model="address">
+                <div class="address">
+                    <input class="mb-3" type="text" name="address" id="address" v-model="address" @keyup="searchAddress()">
+                    <div class="suggestions" v-if="openSuggestions && searchedAddresses.length">
+                        <div class="suggestion" v-for="address in searchedAddresses" @click="selectSuggestion(address)">{{
+                            address.address.freeformAddress }}
+                        </div>
+                    </div>
+                </div>
                 <div class="text-center">
                     <button class="btn btn-success me-2" @click="confirmAddress()">Confirm</button>
                     <button class="btn btn-secondary" @click="openHomeSevice()">Cancel</button>
@@ -552,17 +578,44 @@ export default {
 }
 
 .place-select {
-    max-height: 1000px;
     overflow: hidden;
+    max-height: 1000px;
+    min-height: 200px;
     transition: all 2s;
 
     &.reduced {
         max-height: 0;
+        min-height: 0;
         transition: all 0.8s;
     }
 
     .buttons button {
         width: 52px;
+    }
+
+    .address {
+        position: relative;
+        z-index: 2;
+
+        .suggestions {
+            background-color: white;
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            max-height: 60px;
+            overflow-y: auto;
+            z-index: 1;
+            border: 1px solid black;
+            border-top: 0;
+
+            .suggestion {
+                border-bottom: 1px solid lightblue;
+                padding: 2px 5px;
+                font-size: 10px;
+            }
+        }
+
     }
 }
 </style>

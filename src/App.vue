@@ -478,7 +478,8 @@ export default {
     <!-- BOOKINGS -->
     <section v-if="menu === 7" class="bookings pt-5">
       <h2 class="text-center mb-5" v-if="!bookings.length">NO BOOKINGS</h2>
-      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" :userRole="userRole" />
+      <BookingCard v-for="booking in bookings" :booking="booking" :key="booking.id" :userRole="userRole"
+        @booking-accepted="fetchBookings()" />
     </section>
   </main>
 
