@@ -43,9 +43,10 @@ export default {
                     <i class="fa-solid fa-user mb-1"></i>
                     <small>Profile</small>
                 </div>
-                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(8)"
+                    :class="menuState === 8 ? 'selected' : ''">
                     <i class="fa-solid fa-envelope mb-1"></i>
-                    <small>Mail</small>
+                    <small>Chat</small>
                 </div>
                 <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(7)"
                     :class="menuState === 7 ? 'selected' : ''">

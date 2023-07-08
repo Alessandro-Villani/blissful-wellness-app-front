@@ -22,6 +22,10 @@ export default {
                 duration: this.booking.totalHours,
                 date: null
             },
+            chat: {
+                userId: this.booking.user.id,
+                therapistId: this.booking.therapist.id,
+            },
             showDetails: false,
         }
     },
@@ -29,7 +33,7 @@ export default {
         booking: Object,
         userRole: String,
     },
-    emits: ['booking-handled', 'review-store'],
+    emits: ['booking-handled', 'review-store', 'chat'],
     computed: {
         bookingDate() {
             const date = new Date(this.booking.date);
@@ -85,6 +89,14 @@ export default {
                 })
                 .catch(e => console.log(e))
         },
+        openChat() {
+            axios.post(baseApiUrl + 'chats/store', this.chat)
+                .then(res => {
+                    const chatId = res.data.id;
+                    this.$emit('chat', chatId);
+                })
+                .catch(e => console.log(e))
+        },
     },
     mounted() {
         if (this.booking.homeService) {
@@ -110,6 +122,7 @@ export default {
         <p class="mb-1">{{ bookingDate }}</p>
         <small class="mb-3">{{ booking.startHour }}:00 - {{ booking.endHour }}:00 ({{ booking.totalHours }}
             hrs)</small>
+        <!-- DETAILS -->
         <div class="details" :class="showDetails ? '' : 'reduced'">
             <div class="text-center" v-if="userRole === 'user' || userRole === 'admin'">
                 <p class="mb-1">Therapist</p>
@@ -122,6 +135,7 @@ export default {
                 <img :src="imageUrl(booking.user)" :alt="booking.user.username" class="therapist-pic mb-1">
                 <p>{{ booking.user.username }}</p>
             </div>
+            <!-- MAP -->
             <div v-if="booking.homeService" class="map-container d-flex justify-content-center mb-3">
                 <div :id="'map' + this.booking.id" class="map"></div>
             </div>
@@ -131,10 +145,13 @@ export default {
             <p class="mb-0 me-2" v-if="!showDetails">Show details</p><i class="fa-solid fa-chevron-down"
                 :class="showDetails ? 'rotated' : ''"></i>
         </div>
+        <!-- PRICE -->
         <h4 :class="userRole === 'user' || status === 'pending' || status === 'accepted' ? 'mb-3' : 'mb-0'">Price: ₱{{
             booking.price }}</h4>
+        <!-- BOOKING STATUS -->
         <p class="mb-0" v-if="userRole === 'user'">Status: <span class="status-text">{{ status }}</span></p>
         <p class="mt-3" v-if="userRole === 'user' && status === 'rejected'">Reason: {{ booking.rejectionReason }}</p>
+        <!-- REVIEW -->
         <div class="text-center d-flex flex-column align-items-center mt-5"
             v-if="userRole === 'user' && status === 'completed' && !booking.reviewed">
             <h6 class="mb-3">Rate your experience</h6>
@@ -144,6 +161,7 @@ export default {
                 v-model="review.review"></textarea>
             <button class="btn btn-primary" @click="sendReview">Review</button>
         </div>
+        <!-- BOOKING ADMINISTRATION -->
         <div v-if="userRole != 'user'" class="buttons">
             <div class="accept" v-if="status === 'pending'">
                 <h6>Accept Booking?</h6>
@@ -156,7 +174,13 @@ export default {
                         class="fa-solid fa-check"></i></button>
             </div>
         </div>
+        <!-- CHAT -->
+        <div class="text-center mt-3" v-if="status === 'pending' || status === 'accepted'">
+            <button class="btn btn-primary" @click="openChat()">{{ userRole === 'therapist' ?
+                'Chat Customer' : 'Chat Therapist' }}</button>
+        </div>
     </div>
+    <!-- REJECTION MESSAGE FORM -->
     <div class="rejection-message overlay d-flex align-items-center justify-content-center" v-if="rejectionMessageOpen">
         <div class="card p-5 text-center">
             <label class="mb-1" for="rejectionReason">Rejection Reason</label>
