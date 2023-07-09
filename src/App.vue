@@ -56,6 +56,7 @@ export default {
       selectedTherapist: {},
       productToEdit: {},
       productToPurchase: {},
+      selectedChat: null,
       //FILTERS
       ordersFilter: 'All',
       bookingsFilter: 'All',
@@ -81,7 +82,10 @@ export default {
       if (i === 6 && this.isAdmin) this.fetchOrders();
       if (i === 6 && !this.isAdmin) this.fetchUser();
       if (i === 7) this.fetchBookings();
-      if (i === 8) this.fetchChats();
+      if (i === 8) {
+        this.fetchChats();
+        this.selectedChat = null;
+      };
     },
     setAdministration(i) {
       this.administration.index = i;
@@ -324,10 +328,14 @@ export default {
       this.bookingsFilter = filter;
     },
     //CHATS
-    goToChats() {
+    goToChats(chatId) {
       this.bookingsFilter = 'All';
       this.setMenu(8);
+      this.selectedChat = chatId
     },
+    selectChat(id) {
+      this.selectedChat = id;
+    }
   },
   computed: {
     //ROLES AND MENU
@@ -533,12 +541,13 @@ export default {
         :menus="['All', 'Pending', 'Accepted', 'Declined', 'Completed']" :selectedMenu="bookingsFilter"
         @switch="setBookingsFilter" />
       <BookingCard v-for="booking in filteredBookings" :booking="booking" :key="booking.id" :userRole="userRole"
-        @booking-handled="fetchBookings()" @review-store="fetchBookings" @chat="goToChats()" />
+        @booking-handled="fetchBookings()" @review-store="fetchBookings" @chat="goToChats" />
     </section>
 
     <!-- CHATS -->
     <section v-if="menu === 8" class="chats d-flex flex-column pt-5">
-      <ChatFrame v-for="chat in chats" :chat="chat" :userRole="userRole" />
+      <ChatFrame v-for="chat in chats" :key="chat.id" :chat="chat" :userRole="userRole" :selectedChat="selectedChat"
+        @open="selectChat" @message-sent="fetchChats" />
     </section>
   </main>
 
