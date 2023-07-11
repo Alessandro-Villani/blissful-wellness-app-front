@@ -35,8 +35,10 @@ export default {
 .product-pic {
     height: 100px;
     width: 100px;
+    border-radius: 30% 70% 68% 32% / 30% 55% 45% 70%;
     object-fit: contain;
     object-position: center;
+    box-shadow: 3px 5px 10px rgba($color: #000000, $alpha: 0.4);
 }
 
 h4 {

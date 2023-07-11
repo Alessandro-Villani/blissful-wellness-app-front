@@ -24,7 +24,7 @@ export default {
         },
         imageUrl(user) {
             return 'http://localhost:8080/' + user.profilePic;
-        }
+        },
     }
 }
 </script>

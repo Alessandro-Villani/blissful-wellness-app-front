@@ -39,8 +39,9 @@ export default {
                 </div>
             </nav>
             <nav v-if="isLogged" class="logged-footer row h-100 justify-content-around">
-                <div class="col-2 d-flex flex-column align-items-center justify-content-center">
-                    <i class="fa-solid fa-user mb-1"></i>
+                <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(9)"
+                    :class="menuState === 9 ? 'selected' : ''">
+                    <i class=" fa-solid fa-user mb-1"></i>
                     <small>Profile</small>
                 </div>
                 <div class="col-2 d-flex flex-column align-items-center justify-content-center" @click="menuClick(8)"

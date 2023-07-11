@@ -46,8 +46,11 @@ export default {
             longitude: null,
             searchedAddresses: [],
             therapistBookings: null,
+            couponsApplied: null,
             //SLOTS
             usedSlots: [],
+            //BOOLEANS
+            applyCoupon: false
         }
     },
     computed: {
@@ -64,7 +67,8 @@ export default {
                 address: this.homeService ? this.address : null,
                 latitude: this.homeService ? this.latitude : null,
                 longitude: this.homeService ? this.longitude : null,
-                price: (this.endTime - this.startTime) * this.massage.pricePerHour,
+                price: this.applyCoupon ? (this.endTime - this.startTime) * this.massage.pricePerHour - (this.couponsApplied * this.massage.pricePerHour) : (this.endTime - this.startTime) * this.massage.pricePerHour,
+                couponsApplied: this.couponsApplied
             }
         },
         startDate() {
@@ -114,6 +118,9 @@ export default {
             if (!this.homeService && this.settedHomeService) return 'No home service';
             return 'Do you require home service?';
         },
+        maxApplicableCoupons() {
+            return this.booking.totalHours < this.user.couponQuantity ? this.booking.totalHours : this.user.couponQuantity;
+        }
     },
     methods: {
         imageUrl(user) {
@@ -156,6 +163,7 @@ export default {
             })
                 .then(res => {
                     this.therapistBookings = res.data
+                    this.therapistBookings = this.therapistBookings.filter(booking => !booking.rejected)
                     this.bookingFetchEnd = true;
                 })
                 .catch(e => console.log(e))
@@ -295,11 +303,13 @@ export default {
         },
         //BOOKING
         sendBooking() {
-            axios.post(baseApiUrl + 'bookings/store', this.booking)
-                .then(() => {
-                    this.$emit('booking-sent')
-                })
-                .catch(e => console.log(e))
+            if (this.booking.couponsApplied <= this.maxApplicableCoupons) {
+                axios.post(baseApiUrl + 'bookings/store', this.booking)
+                    .then(() => {
+                        this.$emit('booking-sent')
+                    })
+                    .catch(e => console.log(e))
+            }
         }
     }
 }
@@ -412,6 +422,14 @@ export default {
     <!-- CONFIRMATION -->
     <div class="text-center mt-5" v-if="selectedDay && selectedTherapist && selectedTime && settedHomeService">
         <h4 class="mb-3">Price: ₱{{ booking.price }}</h4>
+        <div v-if="user.couponQuantity" class="coupon d-flex justify-content-center align-items-center mb-3">
+            <label class="me-2" for="apply-coupon">Apply Coupon?</label>
+            <input type="checkbox" id="apply-coupon" v-model="applyCoupon">
+            <small class="ms-2 me-1" v-if="applyCoupon">Quantity (max: {{ maxApplicableCoupons }}
+                )</small>
+            <input class="col-2" v-if="applyCoupon" type="number" min="1" :max="maxApplicableCoupons"
+                v-model="couponsApplied">
+        </div>
         <button class="btn btn-success" @click="sendBooking()">Confirm Booking</button>
     </div>
 </template>

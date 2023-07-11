@@ -24,8 +24,9 @@ import SwitchBar from './components/generics/SwitchBar.vue';
 import BookingCalendar from './components/bookings/BookingCalendar.vue';
 import BookingCard from './components/bookings/BookingCard.vue';
 import SignInForm from './components/auth/SignInForm.vue';
-import ChatFrame from './components/Chat/ChatFrame.vue';
+import ChatFrame from './components/chat/ChatFrame.vue';
 
+import ProfileOverview from './components/profile/ProfileOverview.vue';
 export default {
   name: "Blissful Wellness app",
   data() {
@@ -62,7 +63,7 @@ export default {
       bookingsFilter: 'All',
     }
   },
-  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard, ChatFrame },
+  components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard, ChatFrame, ProfileOverview },
   methods: {
     //menus
     setMenu(i) {
@@ -86,6 +87,7 @@ export default {
         this.fetchChats();
         this.selectedChat = null;
       };
+      if (i === 9) this.fetchUser();
     },
     setAdministration(i) {
       this.administration.index = i;
@@ -365,7 +367,7 @@ export default {
     },
     //PURCHASE ORDERS
     noOrders() {
-      const noOrders = !this.user.orders.length && !this.orders.length;
+      const noOrders = !this.user.orders.filter(order => !order.canceled).length && !this.orders.length;
       return noOrders;
     },
     filteredOrders() {
@@ -548,6 +550,11 @@ export default {
     <section v-if="menu === 8" class="chats d-flex flex-column pt-5">
       <ChatFrame v-for="chat in chats" :key="chat.id" :chat="chat" :userRole="userRole" :selectedChat="selectedChat"
         @open="selectChat" @message-sent="fetchChats" />
+    </section>
+
+    <!-- PROFILE -->
+    <section v-if="menu === 9" class="profile d-flex flex-column pt-5">
+      <ProfileOverview :user="user" :userRole="userRole" />
     </section>
   </main>
 
