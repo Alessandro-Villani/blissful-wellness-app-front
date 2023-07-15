@@ -50,7 +50,7 @@ export default {
       products: [],
       user: {},
       orders: [],
-      bookings: [],
+      bookings: null,
       chats: [],
       massageToEdit: {},
       massageToBook: {},
@@ -58,9 +58,15 @@ export default {
       productToEdit: {},
       productToPurchase: {},
       selectedChat: null,
+      bookingNo: null,
       //FILTERS
       ordersFilter: 'All',
       bookingsFilter: 'All',
+      hideOtherBookingFilters: false,
+      bookingsDateFilter: {
+        isActive: false,
+        date: null,
+      }
     }
   },
   components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard, ChatFrame, ProfileOverview },
@@ -147,39 +153,53 @@ export default {
 
     //fetches
     fetchTherapists() {
+      console.log('fetch therapists');
       axios.get(baseApiUrl + 'therapists')
         .then(res => this.therapists = res.data)
         .catch(e => console.log(e))
     },
     fetchMassages() {
+      console.log('fetch massages');
       axios.get(baseApiUrl + 'massages')
         .then(res => this.massages = res.data)
         .catch(e => console.log(e))
     },
     fetchProducts() {
+      console.log('fetch products');
       axios.get(baseApiUrl + 'products')
         .then(res => this.products = res.data)
         .catch(e => console.log(e))
     },
     fetchUser() {
+      console.log('fetch user');
       axios.get(baseApiUrl + 'users/' + this.user.id)
-        .then(res => this.user = res.data)
+        .then(res => {
+          this.user = res.data;
+          this.orders = this.user.orders;
+        })
         .catch(e => console.log(e))
     },
     fetchOrders() {
+      console.log('fetch orders');
       axios.get(baseApiUrl + 'purchaseorders')
         .then(res => this.orders = res.data)
         .catch(e => console.log(e))
     },
     fetchBookings() {
+      console.log('fetch bookings');
+      let date = null
+      if (this.bookingsDateFilter.isActive) date = this.bookingsDateFilter.date;
+      const params = {
+        date: date
+      }
       if (!this.userRoles.length) {
-        axios.get(baseApiUrl + 'bookings/user/' + this.user.id)
+        axios.get(baseApiUrl + 'bookings/user/' + this.user.id, { params: params })
           .then(res => this.bookings = res.data)
           .catch(e => console.log(e))
 
       }
       if (this.isTherapist) {
-        axios.get(baseApiUrl + 'therapists/user/' + this.user.id)
+        axios.get(baseApiUrl + 'therapists/user/' + this.user.id, { params: params })
           .then(res => {
             const therapist = res.data
             axios.get(baseApiUrl + 'bookings/therapist/' + therapist.id)
@@ -190,16 +210,25 @@ export default {
 
       }
       if (this.isAdmin) {
-        axios.get(baseApiUrl + 'bookings')
+        axios.get(baseApiUrl + 'bookings', { params: params })
           .then(res => this.bookings = res.data)
           .catch(e => console.log(e))
 
       }
     },
+    fetchBooking() {
+      axios.get(baseApiUrl + 'bookings/inlist/' + this.bookingNo)
+        .then(res => {
+          this.bookings = res.data;
+          this.hideOtherBookingFilters = true;
+        })
+        .catch(e => console.log(e))
+    },
     fetchChats() {
+      console.log('fetch chats');
       if (this.userRole === "therapist") {
         console.log(this.userRole)
-        axios.get(baseApiUrl + 'therapists/user/' + this.user.id)
+        axios.get(baseApiUrl + 'therapists/user/' + this.user.id,)
           .then(res => {
             const therapist = res.data
             console.log(therapist.id);
@@ -324,10 +353,16 @@ export default {
     },
     //FILTERS
     setOrdersFilter(filter) {
+      this.refreshOrdersHandledBy(this.userRole);
       this.ordersFilter = filter;
     },
     setBookingsFilter(filter) {
+      this.fetchBookings();
       this.bookingsFilter = filter;
+    },
+    resetBookingNoFilter() {
+      this.fetchBookings();
+      this.hideOtherBookingFilters = false;
     },
     //CHATS
     goToChats(chatId) {
@@ -371,7 +406,7 @@ export default {
       return noOrders;
     },
     filteredOrders() {
-      this.fetchOrders();
+      if (!this.orders) this.fetchOrders();
       let orders = this.orders;
       switch (this.ordersFilter) {
         case 'Pending':
@@ -395,8 +430,8 @@ export default {
     },
     filteredUserOrders() {
       if (this.user.id) {
-        this.fetchUser();
-        let orders = this.user.orders.filter(order => !order.canceled);
+        if (!this.orders) this.fetchUser();
+        let orders = this.orders.filter(order => !order.canceled);
         switch (this.ordersFilter) {
           case 'Pending':
             orders = orders.filter(order => !order.accepted && !order.rejected);
@@ -415,8 +450,9 @@ export default {
         }
       } else return null
     },
+    //BOOKINGS
     filteredBookings() {
-      this.fetchBookings()
+      if (!this.bookings) this.fetchBookings()
       let bookings = this.bookings;
       switch (this.bookingsFilter) {
         case 'Pending':
@@ -435,7 +471,17 @@ export default {
           return bookings;
       }
     },
-
+    //DATES
+    today() {
+      const today = new Date();
+      const day = today.getDate() < 10 ? '0' + today.getDate() : today.getDate();
+      const month = today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth + 1;
+      const year = today.getFullYear();
+      return year + '-' + month + '-' + day;
+    }
+  },
+  mounted() {
+    this.bookingsDateFilter.date = this.today;
   }
 }
 </script>
@@ -538,10 +584,32 @@ export default {
 
     <!-- BOOKINGS -->
     <section v-if="menu === 7" class="bookings d-flex flex-column pt-5 ">
-      <h2 class="text-center mb-5" v-if="!bookings.length">No Bookings</h2>
-      <SwitchBar class="align-self-center" v-if="bookings.length"
+      <SwitchBar class="align-self-center" v-if="bookings.length && !hideOtherBookingFilters"
         :menus="['All', 'Pending', 'Accepted', 'Declined', 'Completed']" :selectedMenu="bookingsFilter"
         @switch="setBookingsFilter" />
+      <div class="filters d-flex justify-content-center align-items-center mb-3">
+        <div class="date-filter d-flex flex-column align-items-center"
+          v-if="(bookings.length || bookingsDateFilter.isActive) && !hideOtherBookingFilters">
+          <label for="booking-date" class="mb-1">Booking date</label>
+          <input class="mb-2" id="booking-date" type="date" v-model="bookingsDateFilter.date"
+            @change="bookingsDateFilter.isActive ? fetchBookings() : null">
+          <div class="date-filter-checkbox d-flex">
+            <input class="me-1" type="checkbox" id="apply-bookings-filter" v-model="bookingsDateFilter.isActive"
+              @change="fetchBookings()">
+            <label for="apply-bookings-filter">Apply filter</label>
+          </div>
+        </div>
+        <div v-if="userRole != 'user'" class="d-flex flex-column align-items-center justify-content-center ms-3">
+          <label for="booking-number" class="mb-1">Booking number</label>
+          <input type="number" id="booking-number" class="mb-2" v-model="bookingNo">
+          <div class="buttons d-flex justify-content-center">
+            <button class="btn btn-primary me-2" @click="fetchBooking()"><i
+                class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="btn btn-danger" @click="resetBookingNoFilter()"><i class="fa-solid fa-ban"></i></button>
+          </div>
+        </div>
+      </div>
+      <h2 class="text-center mb-5" v-if="!bookings.length">No Bookings</h2>
       <BookingCard v-for="booking in filteredBookings" :booking="booking" :key="booking.id" :userRole="userRole"
         @booking-handled="fetchBookings()" @review-store="fetchBookings" @chat="goToChats" />
     </section>
@@ -585,5 +653,18 @@ main {
       min-height: calc(100vh - 190px);
     }
   }
+
+  .date-filter-checkbox {
+
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+
+  }
+
+  #booking-number {
+    width: 145px;
+    height: 28px;
+  }
+
 }
 </style>

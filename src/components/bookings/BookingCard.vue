@@ -118,6 +118,7 @@ export default {
 
 <template>
     <div class="card p-5 text-center mb-3" :class="status">
+        <small class="booking-n">Booking no. {{ booking.id }}</small>
         <h1 class="mb-3">{{ booking.massage.name }} Massage</h1>
         <p class="mb-1">{{ bookingDate }}</p>
         <small class="mb-3">{{ booking.startHour }}:00 - {{ booking.endHour }}:00 ({{ booking.totalHours }}
@@ -194,6 +195,8 @@ export default {
 
 <style scoped lang="scss">
 .card {
+    position: relative;
+
     &.accepted {
         background-color: lightgreen;
     }
@@ -209,6 +212,13 @@ export default {
     &.completed {
         background-color: lightgray;
     }
+
+    .booking-n {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
 }
 
 .details {

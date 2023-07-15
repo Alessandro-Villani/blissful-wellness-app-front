@@ -65,7 +65,8 @@ export default {
 
 <template>
     <div class="col-12">
-        <div class="order-card rounded-3 d-flex flex-wrap py-3 mb-3" :class="status">
+        <div class="order-card rounded-3 d-flex flex-wrap py-5 mb-3" :class="status">
+            <small class="order-no">Order no. {{ purchaseOrder.id }}</small>
             <div class="col-12 text-center mb-3">
                 <h5 class="mb-1">{{ purchaseOrder.product.name }}</h5>
                 <p class="mb-0">Q.ty: {{ purchaseOrder.quantity }}</p>
@@ -144,6 +145,7 @@ export default {
 <style scoped lang="scss">
 .order-card {
     background-color: white;
+    position: relative;
 
     &.accepted {
         background-color: lightgreen;
@@ -163,6 +165,12 @@ export default {
 
     &.canceled {
         background-color: lightsalmon;
+    }
+
+    .order-no {
+        position: absolute;
+        top: 10px;
+        left: 10px;
     }
 
     .product-pic {

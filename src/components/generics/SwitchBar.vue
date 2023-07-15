@@ -24,7 +24,7 @@ export default {
 </script>
 
 <template>
-    <div class="switch-row row bg-light rounded-4 mb-5 border-main w-100" :class="cols">
+    <div class="switch-row row bg-light rounded-4 mb-3 border-main w-100" :class="cols">
         <div class="col text-center py-2" v-for="(menu, i) in menus" :key="i" :class="menuClasses(i, menu)"
             @click="$emit('switch', menu)">
             <p class="mb-0">{{ menu }}</p>
