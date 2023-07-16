@@ -7,7 +7,8 @@ export default {
     name: 'Therapists Management',
     data() {
         return {
-            therapists: []
+            therapists: [],
+            searchTherapist: '',
         }
     },
     emits: ['back', 'add-therapist', 'edit-therapist'],
@@ -28,6 +29,12 @@ export default {
             return 'http://localhost:8080/' + user.profilePic;
         }
     },
+    computed: {
+        filteredTherapists() {
+            const filteredTherapists = this.therapists.filter(therapist => therapist.therapistName.toLowerCase().includes(this.searchTherapist));
+            return filteredTherapists;
+        }
+    },
     mounted() {
 
         this.fetchTherapists();
@@ -39,12 +46,13 @@ export default {
 <template>
     <div class="title d-flex flex-column align-items-center">
         <h2 class="mb-3">Manage Therapists</h2>
+        <input type="text" class="form-control mb-3" placeholder="Search therapist..." v-model="searchTherapist">
         <div class="head-buttons d-flex justify-content-center w-100">
             <button class="btn btn-secondary back" @click="$emit('back', 0)"><i class="fa-solid fa-arrow-left"></i></button>
             <button class="btn btn-success mb-3" @click="$emit('add-therapist')">Add therapist</button>
         </div>
     </div>
-    <div v-for="therapist in therapists" :key="therapist.id" class="row mb-1">
+    <div v-for="therapist in filteredTherapists" :key="therapist.id" class="row mb-1">
         <div class="card py-3 d-flex flex-row align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <img :src="imageUrl(therapist.user)" :alt="therapist.therapistName"

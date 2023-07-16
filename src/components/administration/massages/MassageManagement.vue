@@ -5,6 +5,11 @@ const baseApiUrl = 'http://localhost:8080/api/v1/';
 
 export default {
     name: 'Massage Management',
+    data() {
+        return {
+            massageSearch: ''
+        }
+    },
     props: {
         massages: Array,
     },
@@ -16,6 +21,12 @@ export default {
                 .then(() => this.$emit('refresh'))
                 .catch(e => console.log(e))
         }
+    },
+    computed: {
+        filteredMassages() {
+            const filteredMassages = this.massages.filter(massage => massage.name.toLowerCase().includes(this.massageSearch.toLowerCase()))
+            return filteredMassages;
+        }
     }
 }
 </script>
@@ -23,12 +34,13 @@ export default {
 <template>
     <div class="title d-flex flex-column align-items-center">
         <h2 class="mb-3">Manage Massages</h2>
+        <input type="text" class="form-control mb-3" placeholder="Search massage..." v-model="massageSearch">
         <div class="head-buttons d-flex justify-content-center w-100">
             <button class="btn btn-secondary back" @click="$emit('back', 0)"><i class="fa-solid fa-arrow-left"></i></button>
             <button class="btn btn-success mb-3" @click="$emit('add-massage')">Add massage</button>
         </div>
     </div>
-    <div v-for="massage in massages" :key="massage.id" class="row mb-1">
+    <div v-for="massage in filteredMassages" :key="massage.id" class="row mb-1">
         <div class="card py-3 d-flex flex-row align-items-center justify-content-between">
             <p class="mb-0">{{ massage.name }}</p>
             <div class="d-flex align-items-center buttons">

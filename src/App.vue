@@ -518,7 +518,7 @@ export default {
       <div v-if="massageMenu === 0" class="massage-list">
         <h1 class="text-center mb-5">OUR MASSAGES</h1>
         <MassagesCard v-for="(massage, i) in massages" :key="massage.id" :index="i" :massage="massage"
-          @book="openMassageBooking" />
+          :userRole="userRole" @book="openMassageBooking" />
       </div>
       <BookingCalendar v-if="massageMenu === 1" :massage="massageToBook" :therapists="therapists" :user="user"
         @booking-sent="sentBooking()" />
@@ -527,7 +527,7 @@ export default {
     <!-- PRODUCTS -->
     <section v-if="menu === 4" class="products pt-5">
       <h1 class="text-center mb-5">OUR PRODUCTS</h1>
-      <ProductCard v-for="product in products" :product="product" @order-form="openOrderForm" />
+      <ProductCard v-for="product in products" :product="product" :userRole="userRole" @order-form="openOrderForm" />
     </section>
 
     <!-- ADMINISTRATION -->
