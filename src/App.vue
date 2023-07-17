@@ -58,15 +58,19 @@ export default {
       productToEdit: {},
       productToPurchase: {},
       selectedChat: null,
-      bookingNo: null,
       //FILTERS
+      bookingNo: null,
       ordersFilter: 'All',
       bookingsFilter: 'All',
       hideOtherBookingFilters: false,
       bookingsDateFilter: {
         isActive: false,
         date: null,
-      }
+      },
+      bookingUsernameFilter: '',
+      bookingsPlaceFilter: null,
+      //VISIBILITY BOOLEANS
+      showBookingsAdditionalFilters: false,
     }
   },
   components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard, ChatFrame, ProfileOverview },
@@ -190,8 +194,10 @@ export default {
       let date = null
       if (this.bookingsDateFilter.isActive) date = this.bookingsDateFilter.date;
       const params = {
-        date: date
+        date: date,
+        username: this.bookingUsernameFilter,
       }
+      console.log(params.username);
       if (!this.userRoles.length) {
         axios.get(baseApiUrl + 'bookings/user/' + this.user.id, { params: params })
           .then(res => this.bookings = res.data)
@@ -199,10 +205,10 @@ export default {
 
       }
       if (this.isTherapist) {
-        axios.get(baseApiUrl + 'therapists/user/' + this.user.id, { params: params })
+        axios.get(baseApiUrl + 'therapists/user/' + this.user.id)
           .then(res => {
             const therapist = res.data
-            axios.get(baseApiUrl + 'bookings/therapist/' + therapist.id)
+            axios.get(baseApiUrl + 'bookings/therapist/' + therapist.id, { params: params })
               .then(res => this.bookings = res.data)
               .catch(e => console.log(e))
           })
@@ -351,6 +357,9 @@ export default {
     sentBooking() {
       this.setMenu(7);
     },
+    toggleBookingsAdditionalFilters() {
+      this.showBookingsAdditionalFilters = !this.showBookingsAdditionalFilters;
+    },
     //FILTERS
     setOrdersFilter(filter) {
       this.refreshOrdersHandledBy(this.userRole);
@@ -362,7 +371,12 @@ export default {
     },
     resetBookingNoFilter() {
       this.fetchBookings();
+      this.bookingNo = null;
       this.hideOtherBookingFilters = false;
+    },
+    setPlaceBookingFilter(filter) {
+      this.fetchBookings();
+      this.bookingsPlaceFilter = this.bookingsPlaceFilter === filter ? null : filter;
     },
     //CHATS
     goToChats(chatId) {
@@ -451,9 +465,24 @@ export default {
       } else return null
     },
     //BOOKINGS
-    filteredBookings() {
+    filteredBookingsByPlace() {
       if (!this.bookings) this.fetchBookings()
       let bookings = this.bookings;
+      switch (this.bookingsPlaceFilter) {
+        case 'Home Service':
+          console.log('home');
+          bookings = bookings.filter(booking => booking.homeService);
+          return bookings;
+        case 'In Spa':
+          console.log('spa');
+          bookings = bookings.filter(booking => !booking.homeService);
+          return bookings;
+        default:
+          return bookings;
+      }
+    },
+    filteredBookings() {
+      let bookings = this.filteredBookingsByPlace;
       switch (this.bookingsFilter) {
         case 'Pending':
           bookings = bookings.filter(booking => !booking.accepted && !booking.rejected);
@@ -587,28 +616,43 @@ export default {
       <SwitchBar class="align-self-center" v-if="bookings.length && !hideOtherBookingFilters"
         :menus="['All', 'Pending', 'Accepted', 'Declined', 'Completed']" :selectedMenu="bookingsFilter"
         @switch="setBookingsFilter" />
-      <div class="filters d-flex justify-content-center align-items-center mb-3">
-        <div class="date-filter d-flex flex-column align-items-center"
-          v-if="(bookings.length || bookingsDateFilter.isActive) && !hideOtherBookingFilters">
-          <label for="booking-date" class="mb-1">Booking date</label>
-          <input class="mb-2" id="booking-date" type="date" v-model="bookingsDateFilter.date"
-            @change="bookingsDateFilter.isActive ? fetchBookings() : null">
-          <div class="date-filter-checkbox d-flex">
-            <input class="me-1" type="checkbox" id="apply-bookings-filter" v-model="bookingsDateFilter.isActive"
-              @change="fetchBookings()">
-            <label for="apply-bookings-filter">Apply filter</label>
+      <p class="text-center mb-1" v-if="bookings.length && !hideOtherBookingFilters">Additional Filters</p>
+      <!-- ADDITIONAL FILTERS -->
+      <div class="additional-filters d-flex flex-column" :class="showBookingsAdditionalFilters ? 'open' : ''">
+        <div class="col-6 align-self-center">
+          <SwitchBar class="w-auto" v-if="bookings.length && !hideOtherBookingFilters" :menus="['In Spa', 'Home Service']"
+            :selectedMenu="bookingsPlaceFilter" @switch="setPlaceBookingFilter" />
+        </div>
+        <div class="filters d-flex justify-content-center align-items-center mb-3">
+          <div class="date-filter d-flex flex-column align-items-center"
+            v-if="(bookings.length || bookingsDateFilter.isActive) && !hideOtherBookingFilters">
+            <label for="booking-date" class="mb-1">Booking date</label>
+            <input class="mb-2" id="booking-date" type="date" v-model="bookingsDateFilter.date"
+              @change="bookingsDateFilter.isActive ? fetchBookings() : null">
+            <div class="date-filter-checkbox d-flex">
+              <input class="me-1" type="checkbox" id="apply-bookings-filter" v-model="bookingsDateFilter.isActive"
+                @change="fetchBookings()">
+              <label for="apply-bookings-filter">Apply filter</label>
+            </div>
+          </div>
+          <div v-if="userRole != 'user' && bookings.length"
+            class="d-flex flex-column align-items-center justify-content-center ms-3">
+            <label for="booking-number" class="mb-1">Booking number</label>
+            <input type="number" id="booking-number" class="mb-2" v-model="bookingNo">
+            <div class="buttons d-flex justify-content-center">
+              <button class="btn btn-primary me-2" @click="fetchBooking()"><i
+                  class="fa-solid fa-magnifying-glass"></i></button>
+              <button class="btn btn-danger" @click="resetBookingNoFilter()"><i class="fa-solid fa-ban"></i></button>
+            </div>
           </div>
         </div>
-        <div v-if="userRole != 'user'" class="d-flex flex-column align-items-center justify-content-center ms-3">
-          <label for="booking-number" class="mb-1">Booking number</label>
-          <input type="number" id="booking-number" class="mb-2" v-model="bookingNo">
-          <div class="buttons d-flex justify-content-center">
-            <button class="btn btn-primary me-2" @click="fetchBooking()"><i
-                class="fa-solid fa-magnifying-glass"></i></button>
-            <button class="btn btn-danger" @click="resetBookingNoFilter()"><i class="fa-solid fa-ban"></i></button>
-          </div>
+        <div class="col-6 align-self-center text-center mb-3" v-if="userRole != 'user' && !hideOtherBookingFilters">
+          <label for="username">Username</label>
+          <input type="text" id="username" v-model="bookingUsernameFilter" @keyup="fetchBookings()">
         </div>
       </div>
+      <i v-if="bookings.length && !hideOtherBookingFilters" class="fa-solid fa-chevron-down text-center mb-3"
+        :class="showBookingsAdditionalFilters ? 'rotated' : ''" @click="toggleBookingsAdditionalFilters()"></i>
       <h2 class="text-center mb-5" v-if="!bookings.length">No Bookings</h2>
       <BookingCard v-for="booking in filteredBookings" :booking="booking" :key="booking.id" :userRole="userRole"
         @booking-handled="fetchBookings()" @review-store="fetchBookings" @chat="goToChats" />
@@ -651,6 +695,26 @@ main {
 
     &.logged {
       min-height: calc(100vh - 190px);
+    }
+  }
+
+  .additional-filters {
+    max-height: 0;
+    overflow-y: hidden;
+    transition: max-height 1s;
+
+    &.open {
+      max-height: 1000px;
+      overflow-y: auto;
+    }
+
+  }
+
+  .fa-chevron-down {
+    transition: all 0.5s;
+
+    &.rotated {
+      transform: rotate(180deg);
     }
   }
 

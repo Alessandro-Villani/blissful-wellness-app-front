@@ -13,14 +13,25 @@ export default {
                     stockQuantity: this.formType === 2 ? this.existingProduct.stockQuantity : null,
                 },
                 imageUrl: null,
-            }
+            },
+            loadedImageUrl: null,
         }
     },
     methods: {
         handleFileChange(event) {
             const file = event.target.files[0];
             this.product.imageUrl = file;
+            this.loadedImageUrl = this.product.imageUrl ? URL.createObjectURL(this.product.imageUrl) : null;
         },
+
+    },
+    computed: {
+        imageUrl() {
+            let imageUrl = null;
+            if (this.loadedImageUrl) imageUrl = this.loadedImageUrl;
+            if (this.formType === 2 && !this.loadedImageUrl) imageUrl = 'http://localhost:8080/' + this.existingProduct.imageUrl;
+            return imageUrl;
+        }
     },
     props: {
         formType: Number,
@@ -36,8 +47,7 @@ export default {
         <div class="card p-5 d-flex flex-column align-items-center">
             <h2 class="text-center mb-3"><span v-if="formType === 1">ADD
                 </span><span v-else>EDIT</span> PRODUCT</h2>
-            <img v-if="product.product.imageUrl" :src="product.product.imageUrl" :alt="product.product.name"
-                class="product-pic img-fluid mb-3">
+            <img v-if="imageUrl" :src="imageUrl" alt="preview" class="product-pic img-fluid mb-3">
             <label for="name">Name</label>
             <input class="mb-3" type="text" name="name" id="name" v-model="product.product.name">
             <label for="imageUrl">Image Url</label>
@@ -63,6 +73,8 @@ export default {
 .product-pic {
     height: 100px;
     width: 100px;
+    object-fit: cover;
+    object-position: center;
 }
 
 .buttons {
