@@ -9,7 +9,10 @@ export default {
     computed: {
         backgroundColor() {
             return "background-color:" + this.massage.color;
-        }
+        },
+        imageUrl() {
+            return 'http://localhost:8080/' + this.massage.imageUrl;
+        },
     },
     emits: ['book']
 }
@@ -20,9 +23,7 @@ export default {
         :style="backgroundColor">
         <div class="col-5 d-flex flex-column align-items-center justify-content-between mb-2">
             <h4>{{ massage.name }}</h4>
-            <img class="massage-pic rounded-circle img-fluid"
-                src="https://www.integrativehealthcare.org/mt/wp-content/uploads/2015/03/6-Ways-to-Protect-Your-Hands.jpg"
-                alt="massage">
+            <img class="massage-pic rounded-circle img-fluid" :src="imageUrl" alt="massage">
         </div>
         <div :class="index % 2 === 0 ? 'text-end' : 'text-start'" class="col-7 mb-2">
             <p class="description mb-3">{{ massage.description }}</p>
@@ -55,7 +56,7 @@ export default {
         height: 120px;
         width: 120px;
         object-fit: cover;
-        object-position: top;
+        object-position: center;
         box-shadow: -5px 5px 5px rgba($color: #000000, $alpha: 0.5);
     }
 

@@ -269,14 +269,26 @@ export default {
     massage(massage) {
       console.log(massage);
       if (!massage.isEdit) {
-        axios.post(baseApiUrl + 'massages/store', massage.massage)
+        const formData = new FormData();
+        formData.append('file', massage.imageUrl)
+        formData.append('massage', JSON.stringify(massage.massage))
+        axios.post(baseApiUrl + 'massages/store', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
           .then(() => {
             this.administration.massage = 0;
             this.fetchMassages();
           })
           .catch(e => console.log(e))
       } else {
-        axios.put(baseApiUrl + 'massages/update/' + massage.id, massage.massage)
+        const formData = new FormData();
+        formData.append('massage', JSON.stringify(massage.massage))
+        if (massage.imageUrl) {
+          formData.append('file', massage.imageUrl)
+        }
+        axios.put(baseApiUrl + 'massages/update/' + massage.id, formData)
           .then(() => {
             this.administration.massage = 0;
             this.fetchMassages();
