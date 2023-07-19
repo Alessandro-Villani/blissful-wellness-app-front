@@ -59,8 +59,8 @@ export default {
       productToPurchase: {},
       selectedChat: null,
       //FILTERS
+      //bookings
       bookingNo: null,
-      ordersFilter: 'All',
       bookingsFilter: 'All',
       hideOtherBookingFilters: false,
       bookingsDateFilter: {
@@ -69,8 +69,20 @@ export default {
       },
       bookingUsernameFilter: '',
       bookingsPlaceFilter: null,
+      bookingErrorCode: null,
+      //orders
+      orderNo: null,
+      ordersFilter: 'All',
+      hideOtherOrderFilters: false,
+      ordersPickUpDateFilter: {
+        isActive: false,
+        date: null,
+      },
+      ordersPlaceFilter: null,
+      orderErrorCode: null,
       //VISIBILITY BOOLEANS
       showBookingsAdditionalFilters: false,
+      showOrdersAdditionalFilters: false,
     }
   },
   components: { AppHeader, EmployeesCard, AppJumbotron, MassagesCard, AppFooter, ProductCard, LogInForm, AdministrationPage, MassageForm, MassageManagement, TherapistsManagement, TherapistSelectForm, TherapistForm, SignInForm, ProductsManagement, ProductForm, OrderForm, OrderCard, SwitchBar, BookingCalendar, BookingCard, ChatFrame, ProfileOverview },
@@ -189,6 +201,22 @@ export default {
         .then(res => this.orders = res.data)
         .catch(e => console.log(e))
     },
+    fetchOrder() {
+      console.log('we');
+      axios.get(baseApiUrl + 'purchaseorders/inlist/' + this.orderNo)
+        .then(res => {
+          this.orders = res.data;
+          this.hideOtherOrderFilters = true;
+        })
+        .catch(e => {
+          console.log(e);
+          this.orderErrorCode = e.response.status;
+          if (this.orderErrorCode === 404) {
+            this.orders = [];
+            this.hideOtherOrderFilters = true;
+          }
+        })
+    },
     fetchBookings() {
       console.log('fetch bookings');
       let date = null
@@ -228,7 +256,13 @@ export default {
           this.bookings = res.data;
           this.hideOtherBookingFilters = true;
         })
-        .catch(e => console.log(e))
+        .catch(e => {
+          this.bookingErrorCode = e.response.status;
+          if (this.bookingErrorCode === 404) {
+            this.bookings = [];
+            this.hideOtherBookingFilters = true;
+          }
+        })
     },
     fetchChats() {
       console.log('fetch chats');
@@ -296,9 +330,14 @@ export default {
           .catch(e => console.log(e))
       }
     },
+    addMassage() {
+      this.fetchTherapists();
+      this.administration.massage = 1;
+    },
     editMassage(id) {
       axios.get(baseApiUrl + 'massages/' + id)
         .then(res => {
+          this.fetchTherapists();
           this.massageToEdit = res.data;
           this.administration.massage = 2;
         })
@@ -365,6 +404,9 @@ export default {
       if (role === 'user') this.fetchUser();
       if (role === 'admin') this.fetchOrders();
     },
+    toggleOrdersAdditionalFilters() {
+      this.showOrdersAdditionalFilters = !this.showOrdersAdditionalFilters;
+    },
     // bookings
     sentBooking() {
       this.setMenu(7);
@@ -389,6 +431,15 @@ export default {
     setPlaceBookingFilter(filter) {
       this.fetchBookings();
       this.bookingsPlaceFilter = this.bookingsPlaceFilter === filter ? null : filter;
+    },
+    setPlaceOrderFilter(filter) {
+      console.log('we');
+      this.ordersPlaceFilter = this.ordersPlaceFilter === filter ? null : filter;
+    },
+    resetOrderNoFilter() {
+      this.fetchOrders();
+      this.orderNo = null;
+      this.hideOtherOrderFilters = false;
     },
     //CHATS
     goToChats(chatId) {
@@ -431,9 +482,25 @@ export default {
       const noOrders = !this.user.orders.filter(order => !order.canceled).length && !this.orders.length;
       return noOrders;
     },
-    filteredOrders() {
-      if (!this.orders) this.fetchOrders();
+    filteredOrdersByPlace() {
+      if (!this.orders) {
+        if (this.userRole === 'user') this.fetchUser();
+        else this.fetchOrders();
+      }
       let orders = this.orders;
+      switch (this.ordersPlaceFilter) {
+        case 'Delivery':
+          orders = orders.filter(order => order.delivery);
+          return orders;
+        case 'Pick up':
+          orders = orders.filter(order => !order.delivery)
+          return orders;
+        default:
+          return orders;
+      }
+    },
+    filteredOrders() {
+      let orders = this.filteredOrdersByPlace;
       switch (this.ordersFilter) {
         case 'Pending':
           orders = orders.filter(order => !order.accepted && !order.rejected && !order.canceled);
@@ -455,26 +522,23 @@ export default {
       }
     },
     filteredUserOrders() {
-      if (this.user.id) {
-        if (!this.orders) this.fetchUser();
-        let orders = this.orders.filter(order => !order.canceled);
-        switch (this.ordersFilter) {
-          case 'Pending':
-            orders = orders.filter(order => !order.accepted && !order.rejected);
-            return orders;
-          case 'Accepted':
-            orders = orders.filter(order => order.accepted && !order.delivered);
-            return orders;
-          case 'Declined':
-            orders = orders.filter(order => order.rejected);
-            return orders;
-          case 'Delivered':
-            orders = orders.filter(order => order.delivered);
-            return orders;
-          default:
-            return orders;
-        }
-      } else return null
+      let orders = this.filteredOrdersByPlace.filter(order => !order.canceled);
+      switch (this.ordersFilter) {
+        case 'Pending':
+          orders = orders.filter(order => !order.accepted && !order.rejected);
+          return orders;
+        case 'Accepted':
+          orders = orders.filter(order => order.accepted && !order.delivered);
+          return orders;
+        case 'Declined':
+          orders = orders.filter(order => order.rejected);
+          return orders;
+        case 'Delivered':
+          orders = orders.filter(order => order.delivered);
+          return orders;
+        default:
+          return orders;
+      }
     },
     //BOOKINGS
     filteredBookingsByPlace() {
@@ -587,12 +651,11 @@ export default {
 
       <!-- MASSAGE MANAGEMENT -->
       <MassageManagement v-if="administration.index === 2 && administration.massage === 0" :massages="massages"
-        @back="administration.index = 0" @add-massage="administration.massage = 1" @edit-massage="editMassage"
-        @refresh="fetchMassages" />
+        @back="administration.index = 0" @add-massage="addMassage" @edit-massage="editMassage" @refresh="fetchMassages" />
       <MassageForm v-if="administration.massage === 1 || administration.massage === 2"
         :isEdit="administration.massage === 2 ? true : false"
-        :existingMassage="administration.massage === 2 ? massageToEdit : null" @back="administration.massage = 0"
-        @massage="massage" />
+        :existingMassage="administration.massage === 2 ? massageToEdit : null" :therapists="therapists"
+        @back="administration.massage = 0" @massage="massage" />
 
       <!-- PRODUCTS MANAGEMENT -->
       <ProductsManagement v-if="administration.index === 3 && administration.products === 0"
@@ -603,16 +666,54 @@ export default {
     </section>
 
     <!-- ORDERS -->
-    <section v-if="menu === 6" class="purchase-orders d-flex flex-column align-items-center justify-content-center pt-5">
-      <!-- NO ORDERS -->
-      <div v-if="noOrders">
-        <h2 class="text-center mb-5">No Orders</h2>
-        <button v-if="!isAdmin" class="btn btn-primary" @click="setMenu(4)">Check our products</button>
-      </div>
+    <section v-if="menu === 6" class="purchase-orders d-flex flex-column  pt-5">
       <!-- USER ORDERS -->
-      <SwitchBar v-if="!noOrders"
+      <SwitchBar class="align-self-center" v-if="!noOrders"
         :menus="!isAdmin ? ['All', 'Pending', 'Accepted', 'Declined', 'Delivered'] : ['All', 'Pending', 'Accepted', 'Declined', 'Archived', 'Canceled']"
         :selectedMenu="ordersFilter" @switch="setOrdersFilter" />
+      <p class="text-center mb-1" v-if="!noOrders && !hideOtherOrderFilters">Additional Filters</p>
+      <!-- ADDITIONAL FILTERS -->
+      <div class="additional-filters d-flex flex-column" :class="showOrdersAdditionalFilters ? 'open' : ''">
+        <div class="col-6 align-self-center">
+          <SwitchBar class="w-auto" v-if="!noOrders && !hideOtherOrderFilters" :menus="['Delivery', 'Pick up']"
+            :selectedMenu="ordersPlaceFilter" @switch="setPlaceOrderFilter" />
+        </div>
+        <div class="filters d-flex justify-content-center align-items-center mb-3">
+          <div class="date-filter d-flex flex-column align-items-center"
+            v-if="((!noOrders || ordersPickUpDateFilter.isActive) && ordersPlaceFilter === 'Pick up') && !hideOtherOrderFilters">
+            <label for="booking-date" class="mb-1">Pick up date</label>
+            <input class="mb-2" id="booking-date" type="date" v-model="ordersPickUpDateFilter.date"
+              @change="ordersPickUpDateFilter.isActive ? fetchOrders() : null">
+            <div class="date-filter-checkbox d-flex">
+              <input class="me-1" type="checkbox" id="apply-bookings-filter" v-model="ordersPickUpDateFilter.isActive"
+                @change="userRole === 'user' ? fetchUser() : fetchOrders()">
+              <label for="apply-bookings-filter">Apply filter</label>
+            </div>
+          </div>
+          <div v-if="userRole != 'user' && (!noOrders || orderErrorCode === 404)"
+            class="d-flex flex-column align-items-center justify-content-center"
+            :class="hideOtherOrderFilters || (!hideOtherOrderFilters && ordersPlaceFilter !== 'Pick up') ? '' : 'ms-3'">
+            <label for="booking-number" class="mb-1">Order number</label>
+            <input type="number" id="booking-number" class="mb-2" v-model="orderNo">
+            <div class="buttons d-flex justify-content-center">
+              <button class="btn btn-primary me-2" @click="fetchOrder()"><i
+                  class="fa-solid fa-magnifying-glass"></i></button>
+              <button class="btn btn-danger" @click="resetOrderNoFilter()"><i class="fa-solid fa-ban"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 align-self-center text-center mb-3" v-if="userRole != 'user' && !hideOtherOrderFilters">
+          <label for="username">Username</label>
+          <input type="text" id="username" v-model="bookingUsernameFilter" @keyup="fetchOrders()">
+        </div>
+      </div>
+      <i v-if="orders.length" class="fa-solid fa-chevron-down text-center mb-3"
+        :class="showOrdersAdditionalFilters ? 'rotated' : ''" @click="toggleOrdersAdditionalFilters()"></i>
+      <!-- NO ORDERS -->
+      <div v-if="noOrders" class="text-center">
+        <h2 class="mb-5">No Orders</h2>
+        <button v-if="!isAdmin" class="btn btn-primary" @click="setMenu(4)">Check our products</button>
+      </div>
       <div v-if="!isAdmin && !noOrders" class="customer row">
         <OrderCard v-for="order in filteredUserOrders" :purchaseOrder="order" :forAdmin="isAdmin"
           @order-handled="refreshOrdersHandledBy" />
@@ -647,8 +748,9 @@ export default {
               <label for="apply-bookings-filter">Apply filter</label>
             </div>
           </div>
-          <div v-if="userRole != 'user' && bookings.length"
-            class="d-flex flex-column align-items-center justify-content-center ms-3">
+          <div v-if="userRole != 'user' && (bookings.length || bookingErrorCode === 404)"
+            class="d-flex flex-column align-items-center justify-content-center"
+            :class="hideOtherBookingFilters ? '' : 'ms-3'">
             <label for="booking-number" class="mb-1">Booking number</label>
             <input type="number" id="booking-number" class="mb-2" v-model="bookingNo">
             <div class="buttons d-flex justify-content-center">

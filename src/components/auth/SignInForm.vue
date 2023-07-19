@@ -11,12 +11,14 @@ export default {
                 dateOfBirth: '',
             },
             profilePic: null,
+            loadedProfilePicUrl: null,
         }
     },
     methods: {
         handleFileChange(event) {
             const file = event.target.files[0];
             this.profilePic = file;
+            this.loadedProfilePicUrl = this.profilePic ? URL.createObjectURL(this.profilePic) : null;
         },
         signIn() {
             if (this.user.username && this.user.password && this.user.firstName && this.user.lastName && this.user.dateOfBirth) {
@@ -35,6 +37,9 @@ export default {
 <template>
     <div class="overlay container d-flex align-items-center justify-content-center">
         <div class="signin card p-5">
+            <img class="profile-pic"
+                :src="profilePic ? loadedProfilePicUrl : 'https://t3.ftcdn.net/jpg/05/71/08/24/360_F_571082432_Qq45LQGlZsuby0ZGbrd79aUTSQikgcgc.jpg'"
+                alt="">
             <h2 class="text-center">INSERT YOUR DATA TO REGISTER</h2>
             <form @submit.prevent="signIn" class="signin-form row">
                 <div class="col-12 d-flex flex-column mb-2">
@@ -93,6 +98,18 @@ export default {
             &:hover {
                 color: red;
             }
+        }
+
+        .profile-pic {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 100px;
+            width: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
         }
     }
 }

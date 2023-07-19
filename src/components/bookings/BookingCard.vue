@@ -176,7 +176,7 @@ export default {
             </div>
         </div>
         <!-- CHAT -->
-        <div class="text-center mt-3" v-if="status === 'pending' || status === 'accepted'">
+        <div class="text-center mt-3" v-if="(status === 'pending' || status === 'accepted') && userRole != 'admin'">
             <button class="btn btn-primary" @click="openChat()">{{ userRole === 'therapist' ?
                 'Chat Customer' : 'Chat Therapist' }}</button>
         </div>
