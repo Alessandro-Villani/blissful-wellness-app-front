@@ -7,13 +7,16 @@ export default {
     name: 'Profile Overview',
     data() {
         return {
-            bookings: []
+            bookings: [],
+            profilePic: null,
+            loadedProfilePicUrl: null,
         }
     },
     props: {
         user: Object,
         userRole: String,
     },
+    emits: ['change-pic'],
     methods: {
         fetchBookings() {
             if (this.userRole === 'user') {
@@ -33,11 +36,34 @@ export default {
                     .catch(e => console.log(e))
 
             }
+        },
+        openFileInput() {
+            this.$refs.picInput.click();
+        },
+        handlePicChange(event) {
+            const pic = event.target.files[0];
+            this.profilePic = pic;
+            this.loadedProfilePicUrl = this.profilePic ? URL.createObjectURL(this.profilePic) : null;
+            if (this.profilePic) this.changeProfilePic();
+        },
+        changeProfilePic() {
+            console.log('profile-pic');
+            const formData = new FormData();
+            formData.append('file', this.profilePic)
+            axios.patch(baseApiUrl + 'users/' + this.user.id + '/changeprofilepic', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+                .then(res => {
+                    const user = res.data;
+                    this.$emit('change-pic', user);
+                })
         }
     },
     computed: {
         imageUrl() {
-            return 'http://localhost:8080/' + this.user.profilePic;
+            return this.loadedProfilePicUrl ? this.loadedProfilePicUrl : 'http://localhost:8080/' + this.user.profilePic;
         },
         age() {
             return Math.floor((new Date() - new Date(this.user.dateOfBirth)) / 31557600000);
@@ -69,8 +95,9 @@ export default {
 <template>
     <div class="profile-data mb-5">
         <div class="image-username d-flex align-items-center mb-3">
-            <div class="col-5">
-                <img class="profile-pic" :src="imageUrl" :alt="user.username">
+            <div class="pic-container col-5">
+                <img class="profile-pic" :src="imageUrl" :alt="user.username" @click="openFileInput()">
+                <i class="fa-solid fa-repeat"></i>
             </div>
             <div class="col-7 text-center">
                 <h2 class="mb-0">{{ user.username }}</h2>
@@ -112,10 +139,23 @@ export default {
             </div>
         </div>
     </div>
+    <input type="file" class="d-none" ref="picInput" @change="handlePicChange">
 </template>
 
 <style scoped lang="scss">
 .profile-data {
+
+    .pic-container {
+        position: relative;
+
+        i {
+            color: rgb(253, 1, 165);
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+        }
+    }
+
     .profile-pic {
         width: 150px;
         height: 150px;

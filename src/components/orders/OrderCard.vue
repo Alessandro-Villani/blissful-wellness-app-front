@@ -20,7 +20,7 @@ export default {
             let day = pickupDate.getDate();
             if (day < 10) day = "0" + day;
             const year = pickupDate.getFullYear();
-            return month + "/" + day + "/" + year;
+            return day + "/" + month + "/" + year;
         },
         price() {
             return this.purchaseOrder.quantity * this.purchaseOrder.product.price

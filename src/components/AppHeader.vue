@@ -78,7 +78,7 @@ header {
     height: 75px;
     left: 0;
     right: 0;
-    z-index: 3;
+    z-index: 10;
     box-shadow: 0 0 30px black;
 
     &.logged {
@@ -121,7 +121,7 @@ header {
 
             .user-img {
                 height: 40px;
-                flex-basis: 40px;
+                width: 40px;
                 object-fit: cover;
                 object-position: center;
                 box-shadow: 0 0 2px black;

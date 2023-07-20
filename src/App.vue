@@ -78,6 +78,7 @@ export default {
         isActive: false,
         date: null,
       },
+      orderUsernameFilter: '',
       ordersPlaceFilter: null,
       orderErrorCode: null,
       //VISIBILITY BOOLEANS
@@ -102,9 +103,30 @@ export default {
         this.administration.massage = 0;
         this.administration.products = 0;
       }
-      if (i === 6 && this.isAdmin) this.fetchOrders();
-      if (i === 6 && !this.isAdmin) this.fetchUser();
-      if (i === 7) this.fetchBookings();
+      if (i === 6) {
+        this.fetchOrders();
+        this.showOrdersAdditionalFilters = false;
+        this.orderNo = null;
+        this.ordersFilter = 'All';
+        this.hideOtherOrderFilters = false;
+        this.ordersPickUpDateFilter.isActive = false;
+        this.ordersPickUpDateFilter.date = null;
+        this.orderUsernameFilter = '';
+        this.ordersPlaceFilter = null;
+        this.orderErrorCode = null;
+      }
+      if (i === 7) {
+        this.fetchBookings();
+        this.showBookingsAdditionalFilters = false;
+        this.bookingNo = null;
+        this.bookingsFilter = 'All';
+        this.hideOtherBookingFilters = false;
+        this.bookingsDateFilter.isActive = false;
+        this.bookingsDateFilter.date = null;
+        this.bookingUsernameFilter = '';
+        this.bookingsPlaceFilter = null;
+        this.bookingErrorCode = null;
+      }
       if (i === 8) {
         this.fetchChats();
         this.selectedChat = null;
@@ -166,6 +188,9 @@ export default {
         })
         .catch(e => console.log(e))
     },
+    refreshUser(user) {
+      this.user = user;
+    },
 
     //fetches
     fetchTherapists() {
@@ -191,18 +216,28 @@ export default {
       axios.get(baseApiUrl + 'users/' + this.user.id)
         .then(res => {
           this.user = res.data;
-          this.orders = this.user.orders;
         })
         .catch(e => console.log(e))
     },
     fetchOrders() {
       console.log('fetch orders');
-      axios.get(baseApiUrl + 'purchaseorders')
+      let date = null;
+      if (this.ordersPickUpDateFilter.isActive) date = this.ordersPickUpDateFilter.date;
+      const params = {
+        date: date,
+        username: this.orderUsernameFilter,
+      }
+      const url = this.userRole === 'user' ? baseApiUrl + 'purchaseorders/user/' + this.user.id : baseApiUrl + 'purchaseorders'
+      axios.get(url, { params: params })
         .then(res => this.orders = res.data)
         .catch(e => console.log(e))
     },
     fetchOrder() {
-      console.log('we');
+      this.ordersFilter = 'All';
+      this.ordersPickUpDateFilter.isActive = false;
+      this.ordersPickUpDateFilter.date = null;
+      this.orderUsernameFilter = '';
+      this.ordersPlaceFilter = null;
       axios.get(baseApiUrl + 'purchaseorders/inlist/' + this.orderNo)
         .then(res => {
           this.orders = res.data;
@@ -251,6 +286,11 @@ export default {
       }
     },
     fetchBooking() {
+      this.bookingsFilter = 'All';
+      this.bookingsDateFilter.isActive = false;
+      this.bookingsDateFilter.date = null;
+      this.bookingUsernameFilter = '';
+      this.bookingsPlaceFilter = null;
       axios.get(baseApiUrl + 'bookings/inlist/' + this.bookingNo)
         .then(res => {
           this.bookings = res.data;
@@ -395,14 +435,13 @@ export default {
           console.log('order successfull')
           this.orderForm = false;
           this.fetchProducts();
-          this.fetchUser();
+          this.fetchOrders();
           this.setMenu(6);
         })
         .catch(e => console.log(e))
     },
-    refreshOrdersHandledBy(role) {
-      if (role === 'user') this.fetchUser();
-      if (role === 'admin') this.fetchOrders();
+    refreshOrders() {
+      this.fetchOrders();
     },
     toggleOrdersAdditionalFilters() {
       this.showOrdersAdditionalFilters = !this.showOrdersAdditionalFilters;
@@ -416,7 +455,7 @@ export default {
     },
     //FILTERS
     setOrdersFilter(filter) {
-      this.refreshOrdersHandledBy(this.userRole);
+      this.refreshOrders();
       this.ordersFilter = filter;
     },
     setBookingsFilter(filter) {
@@ -433,8 +472,9 @@ export default {
       this.bookingsPlaceFilter = this.bookingsPlaceFilter === filter ? null : filter;
     },
     setPlaceOrderFilter(filter) {
-      console.log('we');
+      this.fetchOrders();
       this.ordersPlaceFilter = this.ordersPlaceFilter === filter ? null : filter;
+      if (this.orderPlaceFilter !== 'Pick up') this.ordersPickUpDateFilter.isActive = false;
     },
     resetOrderNoFilter() {
       this.fetchOrders();
@@ -483,10 +523,7 @@ export default {
       return noOrders;
     },
     filteredOrdersByPlace() {
-      if (!this.orders) {
-        if (this.userRole === 'user') this.fetchUser();
-        else this.fetchOrders();
-      }
+      if (!this.orders) this.fetchOrders();
       let orders = this.orders;
       switch (this.ordersPlaceFilter) {
         case 'Delivery':
@@ -686,7 +723,7 @@ export default {
               @change="ordersPickUpDateFilter.isActive ? fetchOrders() : null">
             <div class="date-filter-checkbox d-flex">
               <input class="me-1" type="checkbox" id="apply-bookings-filter" v-model="ordersPickUpDateFilter.isActive"
-                @change="userRole === 'user' ? fetchUser() : fetchOrders()">
+                @change="fetchOrders()">
               <label for="apply-bookings-filter">Apply filter</label>
             </div>
           </div>
@@ -704,7 +741,7 @@ export default {
         </div>
         <div class="col-6 align-self-center text-center mb-3" v-if="userRole != 'user' && !hideOtherOrderFilters">
           <label for="username">Username</label>
-          <input type="text" id="username" v-model="bookingUsernameFilter" @keyup="fetchOrders()">
+          <input type="text" id="username" v-model="orderUsernameFilter" @keyup="fetchOrders()">
         </div>
       </div>
       <i v-if="orders.length" class="fa-solid fa-chevron-down text-center mb-3"
@@ -712,15 +749,16 @@ export default {
       <!-- NO ORDERS -->
       <div v-if="noOrders" class="text-center">
         <h2 class="mb-5">No Orders</h2>
-        <button v-if="!isAdmin" class="btn btn-primary" @click="setMenu(4)">Check our products</button>
+        <button v-if="!isAdmin && !ordersPickUpDateFilter.isActive" class="btn btn-primary" @click="setMenu(4)">Check our
+          products</button>
       </div>
       <div v-if="!isAdmin && !noOrders" class="customer row">
         <OrderCard v-for="order in filteredUserOrders" :purchaseOrder="order" :forAdmin="isAdmin"
-          @order-handled="refreshOrdersHandledBy" />
+          @order-handled="refreshOrders" />
       </div>
       <div v-if="isAdmin && !noOrders" class="customer row">
         <OrderCard v-for="order in filteredOrders" :purchaseOrder="order" :forAdmin="isAdmin"
-          @order-handled="refreshOrdersHandledBy" />
+          @order-handled="refreshOrders" />
       </div>
     </section>
 
@@ -780,7 +818,7 @@ export default {
 
     <!-- PROFILE -->
     <section v-if="menu === 9" class="profile d-flex flex-column pt-5">
-      <ProfileOverview :user="user" :userRole="userRole" />
+      <ProfileOverview :user="user" :userRole="userRole" @change-pic="refreshUser" />
     </section>
   </main>
 
