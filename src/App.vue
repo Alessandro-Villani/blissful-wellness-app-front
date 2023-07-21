@@ -817,7 +817,7 @@ export default {
     </section>
 
     <!-- PROFILE -->
-    <section v-if="menu === 9" class="profile d-flex flex-column pt-5">
+    <section v-if="menu === 9" class="profile d-flex flex-column pt-3">
       <ProfileOverview :user="user" :userRole="userRole" @change-pic="refreshUser" />
     </section>
   </main>
